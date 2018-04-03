@@ -45,3 +45,15 @@ If you would like to contribute:
 If you do contribute, I will add your name as a contributor!
 
 ### Iterations
+
+This project is a work in progress; first it started as an ipython notebook on Kaggle, then I translated the work to a script.
+
+It initially started with no functions just to make sure that it worked. however, I have now separated out the parts into different functions, allowing for the user to input what part they'd like to run. 
+
+I will attempt to implement "try/except" functions as well; will update.
+
+Also, there are some parts that do not work (word cloud, word frequencies) because for whatever reason, the tokenization is happening at the letter level rather than the word level. Will investigate and update as well.
+
+### Sources Cited
+
++ Will update

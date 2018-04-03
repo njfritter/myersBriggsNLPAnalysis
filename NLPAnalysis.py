@@ -1,9 +1,9 @@
-# This Python 3 environment comes with many helpful analytics libraries installed
-# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
-# For example, here's several helpful packages to load in 
+# Welcome to my Myers Briggs Personality Type NLP Project
+# Here I will be analyzing tweets that are labeled by their personality types
+# And seeing if there is 
 
 import matplotlib as mpl
-mpl.use('TkAgg')
+mpl.use('TkAgg') # Need to do this everytime for some reason
 import matplotlib.pyplot as plt
 import random
 import numpy as np # linear algebra
@@ -11,7 +11,6 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import csv
 import re
 import nltk
-# Only need this
 import wordcloud
 import os
 import sys
@@ -19,17 +18,22 @@ import sys
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
 metrics, neural_network, model_selection, feature_selection)
 
-# Any results you write to the current directory are saved as output.
+
 unprocessed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/mbti_1.csv'
-# random_data = '~/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/mbti_random.csv'
 processed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/mbti_2.csv'
 local_stopwords = []
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
 
+# Parameters we will use later to tune
+parameters = {
+  'vect__ngram_range': [(1, 1), (1, 2)],
+  'tfidf__use_idf': (True, False),
+  'clf__alpha': (1e-2, 1e-3),
+  }
 
-def show_stuff():
+def basic_output():
   # Basic stuff
   print(file.columns)
   print(file.shape)
@@ -38,7 +42,7 @@ def show_stuff():
 
 def tokenize_data():
   # Tokenize words line by line
-  # Download stopwords here?
+  # Download stopwords here
   nltk.download('stopwords')
   # And write to new file so we don't have to keep doing this
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
@@ -52,7 +56,6 @@ def tokenize_data():
     # Tokenize
     words = [word.lower() for word in tokenizer.tokenize(posts)]
     words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
-    #posts = words
 
     if i % 100 == 0:
         print(i)
@@ -75,25 +78,37 @@ def train_test_split():
   X_train, X_test, y_train, y_test = model_selection.train_test_split(
   mbtiposts, mbtitype, test_size=0.33, random_state=42)
 
-  print("X train length: %d" % len(X_train))
-  print("X test length: %d" % len(X_test))
-  print("Y train length: %d" % len(y_train))
-  print("Y test length: %d" % len(y_test))
+  print("Data split")
 
   return X_train, X_test, y_train, y_test
 
+def build_pipeline(model):
+  # Build pipelines for models
+  text_clf = pipeline.Pipeline([
+   ('vect', feature_extraction.text.CountVectorizer()),
+   ('tfidf', feature_extraction.text.TfidfTransformer()),
+   ('chi2', feature_selection.SelectKBest(feature_selection.chi2, k = 'all')),
+   ('clf', model),
+  ])
+
+  return text_clf
+
+def grid_search(clf, parameters, jobs, X, y):  
+  # Perform grid search
+  gs_clf = model_selection.GridSearchCV(clf, parameters, n_jobs = jobs)
+  gs_clf = gs_clf.fit(X, y)
+
+  best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
+  for param_name in sorted(parameters.keys()):
+    print("%s: %r" % (param_name, best_parameters[param_name]))
+  print(score)
 
 def unique_labels_word_freq():
+
   mbtitype, mbtiposts = read_split()
 
-  print(type(mbtitype))
-  print(type(mbtiposts))
-
-  X_train, X_test, y_train, y_test = model_selection.train_test_split(
-  mbtiposts, mbtitype, test_size=0.33, random_state=42)
-
-  # Show unique labels
-  unique, counts = np.unique(y_train, return_counts=True)
+  # Show counts of personality types of tweets
+  unique, counts = np.unique(mbtitype, return_counts=True)
   print(np.asarray((unique, counts)).T)
 
   words = []
@@ -103,12 +118,8 @@ def unique_labels_word_freq():
   word_features = nltk.FreqDist(words)
   print("\nMost frequent words with counts:")
   for word, frequency in word_features.most_common(25):
-    print('%s;%d' % (word, frequency))
+    print('%s: %d' % (word, frequency))
   print("\n")
-
-#print(word_features_train.most_common(25).keys())
-#print(word_features_test.most_common(25).keys())
-
 
 # Now to make bar graphs
 # plt.plot(file['type'], type = 'bar')
@@ -131,9 +142,6 @@ def word_cloud():
   plt.imshow(cloud, interpolation = 'bilinear')
   plt.axis("off")
   plt.show()
-
-
-# LINK IMAGE HERE 
 
 def initial_model():
   # Split data into training and testing sets
@@ -166,20 +174,13 @@ def initial_model():
   for words, category in zip(ENFP_sentence, predictedENFP):
     print('%r => %s' % (ENFP_sentence, category))
 
-
 def naive_bayes_model():
   # Split data into training and testing sets
   X_train, X_test, y_train, y_test = train_test_split()
 
   # Naive Bayes model fitting and predictions
-  # Building a Pipeline; this does all of the work in extract_and_train() at once  
-  text_clf = pipeline.Pipeline([
-   ('vect', feature_extraction.text.CountVectorizer(tokenizer=lambda doc: doc, lowercase=False)),
-   ('tfidf', feature_extraction.text.TfidfTransformer()),
-   ('chi2', feature_selection.SelectKBest(feature_selection.chi2, k = 'all')),
-   ('clf', naive_bayes.MultinomialNB()),
-  ])
-
+  # Building a Pipeline; this does all of the work in intial_model()  
+  text_clf = build_pipeline(naive_bayes.MultinomialNB())
   text_clf = text_clf.fit(X_train, y_train)
 
   # Evaluate performance on test set
@@ -187,28 +188,10 @@ def naive_bayes_model():
   print("The accuracy of a Naive Bayes algorithm is: ") 
   print(np.mean(predicted == y_test))
   print("Number of mislabeled points out of a total %d points for the Naive Bayes algorithm : %d"
-        % (X_test.shape[0],(y_test != predicted).sum()))
+    % (X_test.shape[0],(y_test != predicted).sum()))
 
-  # Tune parameters
-  parameters = {
-    'vect__ngram_range': [(1, 1), (1, 2)],
-    'tfidf__use_idf': (True, False),
-    'clf__alpha': (1e-2, 1e-3),
-    }
-
-  print("Parameters?")
-  gs_clf = model_selection.GridSearchCV(text_clf, parameters, n_jobs=-1)
-  gs_clf = gs_clf.fit(X_train, y_train)
-  print("Model fit")
-
-  best_parameters, score, _ = max(gs_clf.grid_scores_, key=lambda x: x[1])
-  for param_name in sorted(parameters.keys()):
-    print("%s: %r" % (param_name, best_parameters[param_name]))
-  print(score)
-
-"""
-None yet
-"""
+  # Do a Grid Search to test multiple parameter values
+  #grid_search(text_clf, parameters, -1, X_train, y_train)
 
 def linear_SVM_model():
   # Split data into training and testing sets
@@ -216,78 +199,44 @@ def linear_SVM_model():
 
   # Linear Support Vector Machine
   # Build Pipeline again
-  text_clf_two = pipeline.Pipeline([
-   ('vect', feature_extraction.text.CountVectorizer(tokenizer=lambda doc: doc, lowercase=False)),
-   ('tfidf', feature_extraction.text.TfidfTransformer()),
-   ('chi2', feature_selection.SelectKBest(feature_selection.chi2, k = 'all')),
-   ('clf', linear_model.SGDClassifier(
-     loss='hinge',
-     penalty='l2',
-     alpha=1e-3,
-     max_iter=5,
-     random_state=42)),
-    ])
+  text_clf_two = build_pipeline(linear_model.SGDClassifier(
+   loss='hinge',
+   penalty='l2',
+   alpha=1e-3,
+   max_iter=5,
+   random_state=42))
+    
   text_clf_two = text_clf_two.fit(X_train, y_train)
   predicted_two = text_clf_two.predict(X_test)
   print("The accuracy of a Linear SVM is: ")
   print(np.mean(predicted_two == y_test))
   print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
-        % (X_test.shape[0],(y_test != predicted_two).sum()))
+    % (X_test.shape[0],(y_test != predicted_two).sum()))
 
-
-  # Tune parameters Linear Support Vector Machine
-  parameters = {'vect__ngram_range': [(1, 1), (1, 2)],
-  'tfidf__use_idf': (True, False),
-  'clf__alpha': (1e-2, 1e-3),
-  }
-
-  gs_clf_two = model_selection.GridSearchCV(text_clf_two, parameters, n_jobs=-1)
-  gs_clf_two = gs_clf_two.fit(X_train, y_train)
-
-  best_parameters, score, _ = max(gs_clf_two.grid_scores_, key=lambda x: x[1])
-  for param_name in sorted(parameters.keys()):
-    print("%s: %r" % (param_name, best_parameters[param_name]))
-
-  print(score)
+  # Do a Grid Search to test multiple parameter values
+  #grid_search(text_clf_two, parameters, -1, X_train, y_train)
 
 def neural_network_model():
   # Split data into training and testing sets
   X_train, X_test, y_train, y_test = train_test_split()
 
   # NEURAL NETWORK
-  text_clf_three = pipeline.Pipeline([
-    ('vect', feature_extraction.text.CountVectorizer(tokenizer=lambda doc: doc, lowercase=False)),
-    ('tfidf', feature_extraction.text.TfidfTransformer()),
-    ('chi2', feature_selection.SelectKBest(feature_selection.chi2, k = 'all')),
-    ('clf', neural_network.MLPClassifier(
-      hidden_layer_sizes=(100,), 
-      max_iter=50, 
-      alpha=1e-4,
-      solver='sgd', 
-      verbose=10, 
-      tol=1e-4, 
-      random_state=1,
-      learning_rate_init=.1)),
-    ])
+  text_clf_three = build_pipeline(neural_network.MLPClassifier(
+    hidden_layer_sizes=(100,), 
+    max_iter=50, 
+    alpha=1e-4,
+    solver='sgd', 
+    verbose=10, 
+    tol=1e-4, 
+    random_state=1,
+    learning_rate_init=.1))
 
   text_clf_three.fit(X_train, y_train)
   print("Training set score: %f" % text_clf_three.score(X_train, y_train))
   print("Test set score: %f" % text_clf_three.score(X_test, y_test))
 
-  # Parameter Tuning
-  parameters = {
-  'vect__ngram_range': [(1, 1), (1, 2)],
-  'tfidf__use_idf': (True, False),
-  'clf__alpha': (1e-2, 1e-3),
-  }
-
-  gs_clf_three = model_selection.GridSearchCV(text_clf_three, parameters, n_jobs=-1)
-  gs_clf_three = gs_clf_three.fit(X_train, y_train)
-
-  best_parameters, score, _ = max(gs_clf_three.grid_scores_, key=lambda x: x[1])
-  for param_name in sorted(parameters.keys()):
-    print("%s: %r" % (param_name, best_parameters[param_name]))
-  print(score)
+  # Do a Grid Search to test multiple parameter values
+  #grid_search(text_clf_three, parameters, -1, X_train, y_train)
 
   # Cross Validation Score
   scores = model_selection.cross_val_score(text_clf_three, X_train, y_train, cv = 5)
@@ -298,11 +247,9 @@ def neural_network_model():
 if __name__ == '__main__':
   if len(sys.argv) == 2:
     if sys.argv[1] == 'basic':
-      show_stuff()
+      basic_output()
     elif sys.argv[1] == 'tokenize':
       tokenize_data()
-    elif sys.argv[1] == 'split':
-      train_test_split()
     elif sys.argv[1] == 'unique':
       unique_labels_word_freq()
     elif sys.argv[1] == 'cloud':

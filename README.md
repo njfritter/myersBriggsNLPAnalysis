@@ -12,6 +12,66 @@ My goal here is to remove the noise (stop words), categorize the data (tokenize)
 
 I have attempted to make comments outlining my thought process. Feel free to clone the repo, make a branch, leave comments or contribute in any way you'd like.
 
+### What is the Myers Briggs Personality Type?
+
+The Myers Briggs Personality Type is 
+
+### General Analysis
+In a sentiment analysis project, there are some limitations on the types of analysis one can do. What we CAN do, is things like word frequencies/clouds, label frequencies, remove stop words and analyze
+
+#### Word Frequencies (Top 25; no change after stop words are removed) 
+
+|  Word  | Frequency |
+| ------ | --------- |
+|  Like  |   69675	 |
+|  Think |   49836	 |
+|  People |  47854  |
+|  One |  37166  |
+|  Know |  36934  |
+|  Really |  35291  |
+|  Would |  35015  |
+|  Get |  30804  |
+|  Time |  27610  |
+|  Feel |  23336  |
+|  Much |  23120  |
+|  Well |  22928  |
+|  Love |  21030  |
+|  Good |  20719  |
+|  Things |  20487  |
+|  Say |  20267  |
+|  Way |  19653  |
+|  Something |  19538  |
+|  Want |  19378  |
+|  See |  19134  |
+|  Also |  18330  |
+|  Type |  17149  |
+|  Even |  16914  |
+|  Always |  16809  |
+|  Lot |  16440  |
+
+
+#### Label (Personality Type) Frequencies
+
+|  Type  |  Frequency  |
+|  ENFJ  | 128   |
+|  ENFP  | 463   |
+|  ENTJ  | 158   |
+|  ENTP  | 465   |
+|  ESFJ  | 32   |
+|  ESFP  | 36   |
+|  ESTJ  | 19   |
+|  ESTP  | 62   |
+|  INFJ  | 995   |
+|  INFP  | 1213   |
+|  INTJ  | 752   |
+|  INTP  | 853   |
+|  ISFJ  | 101   |
+|  ISFP  | 178   |
+|  ISTJ  | 128   |
+|  ISTP  | 229   |
+
+
+Clearly this may be an issue down the line; "INFP" 
 
 ### Steps to Reproduction
 

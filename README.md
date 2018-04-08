@@ -14,9 +14,33 @@ I have attempted to make comments outlining my thought process. Feel free to clo
 
 ### What is the Myers Briggs Personality Type?
 
-The Myers Briggs Personality Type is 
+The Myers Briggs Personality Type is based on psychological theory around how people perceive their world and then make accompanying judgements about these perceptions. 
 
-### General Analysis
+It is a rather simplistic view, but one that does have surprising effectiveness at predicting people's behaviors in general when taking into account the limitations of the theory. There are four categories:
+
++ Extroverted/Introverted (E/I):
+	+ Rather than the mainstream view that this distinction means talkative versus antisocial (and other similar variations), this difference actually stems from where one derives their energy from.
+		+ Extroverts gain energy from being around other people: talking, conversing, being noticed, etc. They are capable of being alone, but will get tired out without contact with others.
+		+ Introverts gain energy from being alone. Being alone and allowed to let their thoughts flow is very energizing, and allows one to clear their head (coming from personal experience). Opposite to extroverts, introverts have the capability to socialize and be the center of attention quite effectively; but after a while, even a five minute break alone may be necessary.
+
++ Intuitive/Sensory (N/S):
+	+ Here, the differences lie in how the individual perceives their world. The two domains here are either through the five senses (immediate environment) or within their mind.
+		+ Intuitives (N) are better at perceiving their world through their mind and imagining possibilities in the world. 
+		+ Sensories (S) are better at perceiving their world through their five senses
+
++ Thinking/Feeling (T/F):
+	+ This domain deals with how the individual judges the information they have perceived: Either the individual makes judgments in a Thinking (T) way or a Feeling (F) way
+		+ Thinkers make conclusions about their world through logic and reasoning
+		+ Feelers make conclusions about their world through emotion and gut feeling
+
++ Judgmental/Perceiving (J/P):
+	+ Lastly (and a little more complicated), this domain basically states whether the perceiving trait or the judging trait is the dominant trait of the individual
+		+ Judgers (J) will have their judging trait be their dominant overall trait
+		+ Perceivers (P) will have their perceiving trait be their dominant overall trait
+
+[Here](http://www.myersbriggs.org/my-mbti-personality-type/mbti-basics/) is more in depth detail on the theory and the complexities behind it. 
+
+### General Analysis & Findings
 In a sentiment analysis project, there are some limitations on the types of analysis one can do. What we CAN do, is things like word frequencies/clouds, label frequencies, remove stop words and analyze
 
 #### Word Frequencies (Top 25; no change after stop words are removed) 
@@ -53,25 +77,26 @@ In a sentiment analysis project, there are some limitations on the types of anal
 #### Label (Personality Type) Frequencies
 
 |  Type  |  Frequency  |
-|  ENFJ  | 128   |
-|  ENFP  | 463   |
-|  ENTJ  | 158   |
-|  ENTP  | 465   |
-|  ESFJ  | 32   |
-|  ESFP  | 36   |
-|  ESTJ  | 19   |
-|  ESTP  | 62   |
-|  INFJ  | 995   |
-|  INFP  | 1213   |
-|  INTJ  | 752   |
-|  INTP  | 853   |
-|  ISFJ  | 101   |
-|  ISFP  | 178   |
-|  ISTJ  | 128   |
-|  ISTP  | 229   |
+|  ----  |  ----- |
+| ENFJ   |   190  |
+| ENFP   |   675  |
+| ENTJ   |   231  |
+| ENTP   |   685  |
+| ESFJ   |   42  |
+| ESFP   |   48  |
+| ESTJ   |   39  |
+| ESTP   |   89  |
+| INFJ   |   1470  |
+| INFP   |   1832  |
+| INTJ   |   1091  |
+| INTP   |   1304  |
+| ISFJ   |   166  |
+| ISFP   |   271  |
+| ISTJ   |   205  |
+| ISTP   |   337  |
 
 
-Clearly this may be an issue down the line; "INFP" 
+Clearly this may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" shows up the most, and disproportionally so. Because of this, there will likely be something called "class imbalance", 
 
 ### Steps to Reproduction
 

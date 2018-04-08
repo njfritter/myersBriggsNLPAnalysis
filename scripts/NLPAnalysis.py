@@ -19,8 +19,8 @@ from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear
 metrics, neural_network, model_selection, feature_selection)
 
 
-unprocessed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/mbti_1.csv'
-processed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/mbti_2.csv'
+unprocessed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_1.csv'
+processed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_2.csv'
 local_stopwords = []
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)

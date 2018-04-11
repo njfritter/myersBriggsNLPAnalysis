@@ -16,22 +16,42 @@ import os
 import sys
 # Import libraries for model selection and feature extraction
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection)
+metrics, neural_network, model_selection, feature_selection, svm)
 
 
 unprocessed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_1.csv'
 processed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_2.csv'
-local_stopwords = []
+local_stopwords = np.empty(shape = (10, 1))
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
 
 # Parameters we will use later to tune
-parameters = {
+nb_parameters = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
-  'clf__alpha': (1e-2, 1e-3),
+  'clf__alpha': (1e-1, 1e-2, 1e-3),
+  'clf__fit_prior': (True, False)
   }
+
+svm_parameters = {
+  'vect__ngram_range': [(1, 1), (1, 2)],
+  'tfidf__use_idf': (True, False),
+  'clf__alpha': (1e-1, 1e-2, 1e-3),
+  'penalty': ['l2', 'l1', 'elasticnet'],
+  'l1_ratio': (0, 0.15, 0.5, 0.75, 1),
+  'learning_rate': ['constant', 'optimal', 'invscaling'],
+  'eta0': (0.25, 0.5, 0.75)
+}
+
+nn_parameters = {
+  'vect__ngram_range': [(1, 1), (1, 2)],
+  'tfidf__use_idf': (True, False),
+  #'clf__alpha': (1e-2, 1e-3),
+  'learning_rate_init': (5e-2, 1e-2, 5e-3, 1e-3),
+  'hidden_layer_sizes': (12, 25, 50),
+  'activation': ['relu', 'identity', 'tanh', 'logistic']
+}
 
 def basic_output():
   # Basic stuff
@@ -94,10 +114,12 @@ def build_pipeline(model):
 
 def grid_search(clf, parameters, jobs, X, y):  
   # Perform grid search
-  gs_clf = model_selection.GridSearchCV(clf, parameters, n_jobs = jobs)
+  gs_clf = model_selection.GridSearchCV(clf, 
+    param_grid = parameters, 
+    n_jobs = jobs,
+    verbose = 7
+    )
   gs_clf = gs_clf.fit(X, y)
-
-  print("Model fit")
 
   best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
   for param_name in sorted(parameters.keys()):
@@ -130,18 +152,46 @@ def unique_labels_word_freq():
   # Gather list of words
   words = gather_words(mbtiposts)
 
+  words_top_25 = []
+  freq_top_25 = []
   word_features = nltk.FreqDist(words)
   print("\nMost frequent words with counts:")
   for word, frequency in word_features.most_common(25):
     print('%s: %d' % (word, frequency))
-  print("\n")
+    words_top_25.append(word.title())
+    freq_top_25.append(frequency)
+
+  # Now to make bar graphs
+  # First for the type frequencies
+  fig, ax = plt.subplots()
+  width = 0.5
+  ind = np.arange(len(unique))
+  ax.barh(ind, counts, width, color = 'red')
+  ax.set_yticks(ind + width / 2)
+  ax.set_yticklabels(unique, minor = False)
+  for i, v in enumerate(counts):
+    ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
+  plt.title('Personality Type Frequencies')
+  plt.xlabel('Frequency')
+  plt.ylabel('Type')
+  plt.show()
+
+  # Now top 25 word frequencies
+  fig, ax = plt.subplots()
+  width = 0.5
+  unique, counts = np.array(words_top_25), np.array(freq_top_25)
+  ind = np.arange(len(unique))
+  ax.barh(ind, counts, width, color = 'red')
+  ax.set_yticks(ind + width / 2)
+  ax.set_yticklabels(unique, minor = False)
+  for i, v in enumerate(counts):
+    ax.text(v + 2, i - 0.25, str(v), color = 'blue', fontweight = 'bold')
+  plt.title('Top 25 Word Frequencies')
+  plt.xlabel('Frequency')
+  plt.ylabel('Word')
+  plt.show()
 
 
-# Now to make bar graphs
-# plt.plot(file['type'], type = 'bar')
-
-#direc = path.dirname(__file__)
-#text = open(file['posts']).read()
 
 def word_cloud():
 
@@ -206,40 +256,52 @@ def naive_bayes_model():
 
   # Evaluate performance on test set
   predicted = text_clf.predict(X_test)
-  print("The accuracy of a Naive Bayes algorithm is: ") 
+  print("The accuracy of the Naive Bayes algorithm is: ") 
   print(np.mean(predicted == y_test))
+  print("The test error rate of the Naive Bayes algorithm is: ")
+  print(1 - np.mean(predicted == y_test))
   print("Number of mislabeled points out of a total %d points for the Naive Bayes algorithm : %d"
     % (X_test.shape[0],(y_test != predicted).sum()))
 
-  # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf, parameters, -1, X_train, y_train)
+  # Cross Validation
   mbtiposts, mbtitype = read_split()
   cross_val(text_clf, mbtiposts, mbtitype)
+
+  # Do a Grid Search to test multiple parameter values
+  grid_search(text_clf, nb_parameters, 1, X_train, y_train)
 
 def linear_SVM_model():
   # Split data into training and testing sets
   X_train, X_test, y_train, y_test = train_test_split()
 
-  # Linear Support Vector Machine
+  # Linear Support Vector Machine w/ stochastic gradient descent (SGD) learning
+  # This model can be other linear models, but using "hinge" makes it a SVM
   # Build Pipeline again
+
   text_clf_two = build_pipeline(linear_model.SGDClassifier(
    loss='hinge',
    penalty='l2',
    alpha=1e-3,
    max_iter=5,
+   learning_rate = 'optimal',
    random_state=42))
-    
+
   text_clf_two = text_clf_two.fit(X_train, y_train)
   predicted_two = text_clf_two.predict(X_test)
-  print("The accuracy of a Linear SVM is: ")
+  print("The accuracy of the Linear SVM is: ")
   print(np.mean(predicted_two == y_test))
+  print("The test error rate of the Linear SVM algorithm is: ")
+  print(1 - np.mean(predicted_two == y_test))
   print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
     % (X_test.shape[0],(y_test != predicted_two).sum()))
 
-  # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_two, parameters, -1, X_train, y_train)
+  # Cross Validation
   mbtiposts, mbtitype = read_split()
   cross_val(text_clf_two, mbtiposts, mbtitype)
+
+  # Do a Grid Search to test multiple parameter values
+  #grid_search(text_clf_two, svm_parameters, -1, X_train, y_train)
+
 
 def neural_network_model():
   # Split data into training and testing sets
@@ -247,7 +309,7 @@ def neural_network_model():
 
   # NEURAL NETWORK
   text_clf_three = build_pipeline(neural_network.MLPClassifier(
-    hidden_layer_sizes=(100,), 
+    hidden_layer_sizes=(50,), 
     max_iter=50, 
     alpha=1e-4,
     solver='sgd', 
@@ -260,17 +322,12 @@ def neural_network_model():
   print("Training set score: %f" % text_clf_three.score(X_train, y_train))
   print("Test set score: %f" % text_clf_three.score(X_test, y_test))
 
-  # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_three, parameters, -1, X_train, y_train)
-
   # Cross Validation Score
   mbtiposts, mbtitype = read_split()
   cross_val(text_clf_three, mbtiposts, mbtitype)
-  """
-  scores = model_selection.cross_val_score(text_clf_three, X_train, y_train, cv = 5)
-  print(scores)
-  print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-  """
+
+  # Do a Grid Search to test multiple parameter values
+  #grid_search(text_clf_three, nn_parameters, -1, X_train, y_train)
 
 
 if __name__ == '__main__':

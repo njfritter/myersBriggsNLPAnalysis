@@ -74,6 +74,10 @@ In a sentiment analysis project, there are some limitations on the types of anal
 |  Lot  |  16432   |
 
 
+#### WordCloud (based on frequencies above; this can also be found in the *images* folder)
+
+<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/wordcloud.png" style = "width: 100px;"/>
+
 #### Label (Personality Type) Frequencies
 
 |  Type  |  Frequency  |
@@ -106,21 +110,31 @@ As a next step, I will alter the types to look at specific type combination diff
 + NJ vs NP vs SJ vs SP
 + Etc.
 
+Whichever method I choose should reduce error and increase accuracy due to increased simplicity of the model.
+
 #### Model results
 
 For this project, I utilized three different methods known for success in Natural Language Processing (NLP): 
-+ Naive Bayes Model
++ Multinomial Naive Bayes Model (specifically multinomial due to the number of classes)
 + Linear Support Vector Machine
 + Multi Layer Perceptron (simple Neural Network)
 
 Using the original, four letter types (16 classes) here are the model results:
 
-|  Model  |  Accuracy  |  Cross Validation Score   |  Hyperparameter Optimization  |
-| Naive Bayes |  0.2169   |   Accuracy: 0.21 (+/- 0.00)  |   Blank   			   |
-| Linear Support Vector Machine  | 0.6717  |  Accuracy: 0.67 (+/- 0.03)  |  Blank  |
-| Multi Layer Perceptron  |   0.6577  |   Accuracy: 0.66 (+/- 0.02)   |  Blank     |
+|  Model  |  Accuracy  |  Test Error Rate |  Cross Validation Score   |  Hyperparameter Optimization  |
+| ------  |  --------- |  -----------------------  |  -------------------------    |   -----------    |
+| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {
+  'vect__ngram_range': (1, 1),
+  'tfidf__use_idf': False,
+  'clf__alpha': 0,
+  'clf__fit_prior': False
+  } 	|
+| Linear Support Vector Machine  | 0.6717  |   0.3283  |  Accuracy: 0.67 (+/- 0.03)  |  Blank  |
+| Multi Layer Perceptron  |   0.6577  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     |
 
 As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
+
+** Will be doing hyperparameter tuning shortly **
 
 I will be showcasing a few of the type combinations mentioned earlier; may do more later.
 

@@ -48,13 +48,14 @@ def tokenize_data():
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
   processed = csv.writer(open(processed_data, 'w+'))
 
+
   i = 0
   for line in csv_file:
     (ptype, posts) = line
     # Regular expressions
-    posts = re.sub(r"(?:\@|https?\://)\S+", "", posts)
+    words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
     # Tokenize
-    words = [word.lower() for word in tokenizer.tokenize(posts)]
+    words = [word.lower() for word in tokenizer.tokenize(words)]
     words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
 
     if i % 100 == 0:
@@ -65,20 +66,18 @@ def tokenize_data():
 
 def read_split():
   # Split up into types and posts
-  processed_file = pd.read_csv(processed_data, names = columns)
+  processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
   mbtitype = np.array(processed_file['type'])
   mbtiposts = np.array(processed_file['posts'])
 
-  return mbtitype, mbtiposts
+  return mbtiposts, mbtitype
 
 def train_test_split():
   # Split data into training and testing sets
-  mbtitype, mbtiposts = read_split()
+  mbtiposts, mbtitype = read_split()
 
   X_train, X_test, y_train, y_test = model_selection.train_test_split(
   mbtiposts, mbtitype, test_size=0.33, random_state=42)
-
-  print("Data split")
 
   return X_train, X_test, y_train, y_test
 
@@ -98,28 +97,45 @@ def grid_search(clf, parameters, jobs, X, y):
   gs_clf = model_selection.GridSearchCV(clf, parameters, n_jobs = jobs)
   gs_clf = gs_clf.fit(X, y)
 
+  print("Model fit")
+
   best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
   for param_name in sorted(parameters.keys()):
     print("%s: %r" % (param_name, best_parameters[param_name]))
   print(score)
 
+def gather_words(posts):
+  
+  words = []
+  for tweet in posts:
+    # Split tweet into words by comma
+    # Or else iterator splits by letter, not word
+    tweet_words = tweet.split(',')
+    for word in tweet_words:
+      # Remove brackets at end of tweet and quotes
+      word = re.sub(r"]", "", word)
+      word = re.sub(r"\'", "", word)
+      words.append(word)
+
+  return words
+
 def unique_labels_word_freq():
 
-  mbtitype, mbtiposts = read_split()
+  mbtiposts, mbtitype = read_split()
 
   # Show counts of personality types of tweets
   unique, counts = np.unique(mbtitype, return_counts=True)
   print(np.asarray((unique, counts)).T)
 
-  words = []
-  for word in mbtiposts:
-    words += word
+  # Gather list of words
+  words = gather_words(mbtiposts)
 
   word_features = nltk.FreqDist(words)
   print("\nMost frequent words with counts:")
   for word, frequency in word_features.most_common(25):
     print('%s: %d' % (word, frequency))
   print("\n")
+
 
 # Now to make bar graphs
 # plt.plot(file['type'], type = 'bar')
@@ -129,11 +145,10 @@ def unique_labels_word_freq():
 
 def word_cloud():
 
-  mbtitype, mbtiposts = read_split()
+  mbtiposts, mbtitype = read_split()
 
-  words = []
-  for word in mbtiposts:
-    words += word
+  # Gather list of words
+  words = gather_words(mbtiposts)
 
   wordcloud_words = " ".join(words)
   # Lower max font size
@@ -142,6 +157,12 @@ def word_cloud():
   plt.imshow(cloud, interpolation = 'bilinear')
   plt.axis("off")
   plt.show()
+
+def cross_val(clf, X_train, y_train):
+  # Cross Validation Score
+  scores = model_selection.cross_val_score(clf, X_train, y_train, cv = 5)
+  print(scores)
+  print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
 def initial_model():
   # Split data into training and testing sets
@@ -192,6 +213,8 @@ def naive_bayes_model():
 
   # Do a Grid Search to test multiple parameter values
   #grid_search(text_clf, parameters, -1, X_train, y_train)
+  mbtiposts, mbtitype = read_split()
+  cross_val(text_clf, mbtiposts, mbtitype)
 
 def linear_SVM_model():
   # Split data into training and testing sets
@@ -215,6 +238,8 @@ def linear_SVM_model():
 
   # Do a Grid Search to test multiple parameter values
   #grid_search(text_clf_two, parameters, -1, X_train, y_train)
+  mbtiposts, mbtitype = read_split()
+  cross_val(text_clf_two, mbtiposts, mbtitype)
 
 def neural_network_model():
   # Split data into training and testing sets
@@ -239,9 +264,13 @@ def neural_network_model():
   #grid_search(text_clf_three, parameters, -1, X_train, y_train)
 
   # Cross Validation Score
+  mbtiposts, mbtitype = read_split()
+  cross_val(text_clf_three, mbtiposts, mbtitype)
+  """
   scores = model_selection.cross_val_score(text_clf_three, X_train, y_train, cv = 5)
   print(scores)
   print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+  """
 
 
 if __name__ == '__main__':

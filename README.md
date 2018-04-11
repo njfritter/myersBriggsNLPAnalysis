@@ -47,31 +47,31 @@ In a sentiment analysis project, there are some limitations on the types of anal
 
 |  Word  | Frequency |
 | ------ | --------- |
-|  Like  |   69675	 |
-|  Think |   49836	 |
-|  People |  47854  |
-|  One |  37166  |
-|  Know |  36934  |
-|  Really |  35291  |
-|  Would |  35015  |
-|  Get |  30804  |
-|  Time |  27610  |
-|  Feel |  23336  |
-|  Much |  23120  |
-|  Well |  22928  |
-|  Love |  21030  |
-|  Good |  20719  |
-|  Things |  20487  |
-|  Say |  20267  |
-|  Way |  19653  |
-|  Something |  19538  |
-|  Want |  19378  |
-|  See |  19134  |
-|  Also |  18330  |
-|  Type |  17149  |
-|  Even |  16914  |
-|  Always |  16809  |
-|  Lot |  16440  |
+|  Like   |  69587   |
+|  Think  |  49669   |
+|  People  |  47812   |
+|  One    |  37115   |
+|  Know   |  36811   |
+|  Really  |  35196   |
+|  Would  |  34937   |
+|  Get  |  30777   |
+|  Time  |  27588   |
+|  Feel  |  23292   |
+|  Much  |  23098   |
+|  Well  |  22802   |
+|  Love  |  20955   |
+|  Good  |  20684   |
+|  Things  |  20472   |
+|  Say  |  20236   |
+|  Way  |  19642   |
+|  Something  |  19521   |
+|  Want  |  19346   |
+|  See  |  19103   |
+|  Also  |  18294   |
+|  Type  |  17133   |
+|  Even  |  16897   |
+|  Always  |  16764   |
+|  Lot  |  16432   |
 
 
 #### Label (Personality Type) Frequencies
@@ -96,7 +96,33 @@ In a sentiment analysis project, there are some limitations on the types of anal
 | ISTP   |   337  |
 
 
-Clearly this may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" shows up the most, and disproportionally so. Because of this, there will likely be something called "class imbalance", 
+Clearly this may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" shows up the most, and disproportionally so. Because of this, there will likely be something called "class imbalance": this is where some classes are represented much more highly than others.  
+
+Also, complexity does not always make models better. The fact that there are sixteen different classes will make any model perform not so well. 
+
+As a next step, I will alter the types to look at specific type combination differences, which may include:
++ E vs I, N vs S, T vs F, J vs P
++ NT vs NF vs SF vs ST
++ NJ vs NP vs SJ vs SP
++ Etc.
+
+#### Model results
+
+For this project, I utilized three different methods known for success in Natural Language Processing (NLP): 
++ Naive Bayes Model
++ Linear Support Vector Machine
++ Multi Layer Perceptron (simple Neural Network)
+
+Using the original, four letter types (16 classes) here are the model results:
+
+|  Model  |  Accuracy  |  Cross Validation Score   |  Hyperparameter Optimization  |
+| Naive Bayes |  0.2169   |   Accuracy: 0.21 (+/- 0.00)  |   Blank   			   |
+| Linear Support Vector Machine  | 0.6717  |  Accuracy: 0.67 (+/- 0.03)  |  Blank  |
+| Multi Layer Perceptron  |   0.6577  |   Accuracy: 0.66 (+/- 0.02)   |  Blank     |
+
+As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
+
+I will be showcasing a few of the type combinations mentioned earlier; may do more later.
 
 ### Steps to Reproduction
 

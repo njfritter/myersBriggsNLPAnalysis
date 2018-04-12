@@ -41,38 +41,11 @@ It is a rather simplistic view, but one that does have surprising effectiveness 
 [Here](http://www.myersbriggs.org/my-mbti-personality-type/mbti-basics/) is more in depth detail on the theory and the complexities behind it. 
 
 ### General Analysis & Findings
-In a sentiment analysis project, there are some limitations on the types of analysis one can do. What we CAN do, is things like word frequencies/clouds, label frequencies, remove stop words and analyze
+In a sentiment analysis project, there are some limitations on the types of analysis one can do. What we CAN do, is things like word frequencies/clouds, label frequencies, remove stop words and use these remaining words to build a model predicting the target class (personality type).
 
 #### Word Frequencies (Top 25; no change after stop words are removed) 
 
-|  Word  | Frequency |
-| ------ | --------- |
-|  Like   |  69587   |
-|  Think  |  49669   |
-|  People  |  47812   |
-|  One    |  37115   |
-|  Know   |  36811   |
-|  Really  |  35196   |
-|  Would  |  34937   |
-|  Get  |  30777   |
-|  Time  |  27588   |
-|  Feel  |  23292   |
-|  Much  |  23098   |
-|  Well  |  22802   |
-|  Love  |  20955   |
-|  Good  |  20684   |
-|  Things  |  20472   |
-|  Say  |  20236   |
-|  Way  |  19642   |
-|  Something  |  19521   |
-|  Want  |  19346   |
-|  See  |  19103   |
-|  Also  |  18294   |
-|  Type  |  17133   |
-|  Even  |  16897   |
-|  Always  |  16764   |
-|  Lot  |  16432   |
-
+<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/wordfrequencylabeled.png" style = "width: 100px;"/>
 
 #### WordCloud (based on frequencies above; this can also be found in the *images* folder)
 
@@ -80,29 +53,12 @@ In a sentiment analysis project, there are some limitations on the types of anal
 
 #### Label (Personality Type) Frequencies
 
-|  Type  |  Frequency  |
-|  ----  |  ----- |
-| ENFJ   |   190  |
-| ENFP   |   675  |
-| ENTJ   |   231  |
-| ENTP   |   685  |
-| ESFJ   |   42  |
-| ESFP   |   48  |
-| ESTJ   |   39  |
-| ESTP   |   89  |
-| INFJ   |   1470  |
-| INFP   |   1832  |
-| INTJ   |   1091  |
-| INTP   |   1304  |
-| ISFJ   |   166  |
-| ISFP   |   271  |
-| ISTJ   |   205  |
-| ISTP   |   337  |
+<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/typefrequencylabeled.png" style = "width: 100px;"/>
 
 
 Clearly this may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" shows up the most, and disproportionally so. Because of this, there will likely be something called "class imbalance": this is where some classes are represented much more highly than others.  
 
-Also, complexity does not always make models better. The fact that there are sixteen different classes will make any model perform not so well. 
+Also, complexity does not always make models better. The fact that there are sixteen different classes would impact any model's performance.
 
 As a next step, I will alter the types to look at specific type combination differences, which may include:
 + E vs I, N vs S, T vs F, J vs P
@@ -121,16 +77,13 @@ For this project, I utilized three different methods known for success in Natura
 
 Using the original, four letter types (16 classes) here are the model results:
 
-|  Model  |  Accuracy  |  Test Error Rate |  Cross Validation Score   |  Hyperparameter Optimization  |
-| ------  |  --------- |  -----------------------  |  -------------------------    |   -----------    |
-| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {
-  'vect__ngram_range': (1, 1),
-  'tfidf__use_idf': False,
-  'clf__alpha': 0,
-  'clf__fit_prior': False
-  } 	|
-| Linear Support Vector Machine  | 0.6717  |   0.3283  |  Accuracy: 0.67 (+/- 0.03)  |  Blank  |
-| Multi Layer Perceptron  |   0.6577  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     |
+|  Model  |  Accuracy  |  Test Error Rate |  Cross Validation Score   |  Hyperparameter Optimization | Optimized Accuracy |
+| ------  |  --------- |  --------------  |  ------------------------ |   ---------------    |  ----------|
+| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 0, 'clf__fit_prior': False} 	|  Not sure  |
+| Linear Support Vector Machine  | 0.6717  |   0.3283  |  Accuracy: 0.67 (+/- 0.03)  |  {'clf__alpha': 0.001, 'clf__eta0': 0.25, 'clf__l1_ratio': 0, 'clf__learning_rate': 'optimal', 'clf__penalty': 'l2', 'tfidf__use_idf': True, 'vect__ngram_range': (1, 1)}  |   0.6569   |
+| Multi Layer Perceptron  |   0.6577  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     | Blank  |
+
+*The accuracy and test error rate are based on one train test split model fitting. 
 
 As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
 
@@ -144,7 +97,7 @@ I will be showcasing a few of the type combinations mentioned earlier; may do mo
 + Download the package `virtualenv`
 	+ Assuming you have made it this far you should have experience with one of `pip/pip3`, `brew` or another package manager
 	+ Here we will use `pip3` (python3 compatible)
-+ Run the following commands:
++ Run the following commands in your terminal (commands compatible with Linux and Mac):
 	+ `virtualenv venv` 
 		+ This creates a virtual environment called "venv"
 		+ Feel free to change the second word to whatever you'd like to call it
@@ -152,10 +105,15 @@ I will be showcasing a few of the type combinations mentioned earlier; may do mo
 		+ This turns on the virtual environment and puts you in it
 	+ `pip3 install -r requirements.txt`
 		+ Installs every python package listed in the requirements.txt file
-	+ `python3 NLPAnalysis.py *text*`
++ I've made various scripts and places them in the `scripts` folder so one can look at each part individually (`naive_bayes.py` for the Naive Bayes model, `exploratory_analysis.py` which is self-explanatory, etc.)
+	+ Run `python3 scripts/*anyscript*.py and watch the magic happen!
+	+ Also feel free to change my train test split size, grid search parameters, etc.
++ However, for those that want everything in one I've made `NLPAnalysis.py`
+	+ Run `python3 scripts/NLPAnalysis.py *text*`
 		+ Examine the code at the bottom of each part
 		+ Replace *text* with whichever part you'd like to run
 		+ E.g. "tokenize" to tokenize data, "cloud" to create a word cloud, etc.
++ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory after cloning (not in the `scripts` folder). I have defined the file path to the data 
 
 ### Contributing
 
@@ -175,9 +133,8 @@ This project is a work in progress; first it started as an ipython notebook on K
 
 It initially started with no functions just to make sure that it worked. however, I have now separated out the parts into different functions, allowing for the user to input what part they'd like to run. 
 
-I will attempt to implement "try/except" functions as well; will update.
+I will implement "try/except" functions since this seems to be best practice, and I will also eventually split up the models into different scripts, with one script being a "helper functions" script.
 
-Also, there are some parts that do not work (word cloud, word frequencies) because for whatever reason, the tokenization is happening at the letter level rather than the word level. Will investigate and update as well.
 
 ### Sources Cited
 

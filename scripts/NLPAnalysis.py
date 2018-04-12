@@ -19,8 +19,8 @@ from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear
 metrics, neural_network, model_selection, feature_selection, svm)
 
 
-unprocessed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_1.csv'
-processed_data = '/Users/nathanfritter/myProjects/dataScience/myRepos/myersBriggsNLPAnalysis/data/mbti_2.csv'
+unprocessed_data = './data/mbti_1.csv'
+processed_data = './data/mbti_2.csv'
 local_stopwords = np.empty(shape = (10, 1))
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
@@ -37,20 +37,19 @@ nb_parameters = {
 svm_parameters = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
-  'clf__alpha': (1e-1, 1e-2, 1e-3),
-  'penalty': ['l2', 'l1', 'elasticnet'],
-  'l1_ratio': (0, 0.15, 0.5, 0.75, 1),
-  'learning_rate': ['constant', 'optimal', 'invscaling'],
-  'eta0': (0.25, 0.5, 0.75)
+  'clf__alpha': (1e-2, 1e-3),
+  'clf__penalty': ['l2', 'l1', 'elasticnet'],
+  'clf__l1_ratio': (0, 0.5, 1),
+  'clf__learning_rate': ['optimal'],
+  'clf__eta0': (0.25, 0.5, 0.75)
 }
 
 nn_parameters = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
-  #'clf__alpha': (1e-2, 1e-3),
-  'learning_rate_init': (5e-2, 1e-2, 5e-3, 1e-3),
-  'hidden_layer_sizes': (12, 25, 50),
-  'activation': ['relu', 'identity', 'tanh', 'logistic']
+  'clf__learning_rate_init': (1e-2, 1e-3),
+  'clf__hidden_layer_sizes': (25, 50),
+  'clf__activation': ['relu', 'identity', 'tanh', 'logistic']
 }
 
 def basic_output():
@@ -67,7 +66,6 @@ def tokenize_data():
   # And write to new file so we don't have to keep doing this
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
   processed = csv.writer(open(processed_data, 'w+'))
-
 
   i = 0
   for line in csv_file:
@@ -97,7 +95,7 @@ def train_test_split():
   mbtiposts, mbtitype = read_split()
 
   X_train, X_test, y_train, y_test = model_selection.train_test_split(
-  mbtiposts, mbtitype, test_size=0.33, random_state=42)
+  mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
 
   return X_train, X_test, y_train, y_test
 
@@ -121,10 +119,13 @@ def grid_search(clf, parameters, jobs, X, y):
     )
   gs_clf = gs_clf.fit(X, y)
 
+  """
   best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
   for param_name in sorted(parameters.keys()):
     print("%s: %r" % (param_name, best_parameters[param_name]))
   print(score)
+  """
+  print(gs_clf.cv_results_)
 
 def gather_words(posts):
   
@@ -141,6 +142,25 @@ def gather_words(posts):
 
   return words
 
+def plot_frequency(labels, freq, data):
+  fig, ax = plt.subplots()
+  width = 0.5
+  ind = np.arange(len(labels))
+  ax.barh(ind, freq, width, color = 'red')
+  ax.set_yticks(ind + width / 2)
+  ax.set_yticklabels(labels, minor = False)
+  for i, v in enumerate(freq):
+    ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
+  if data == 'Type': 
+    plt.title('Personality Type Frequencies')
+    plt.xlabel('Frequency')
+    plt.ylabel('Type')
+  if data == 'Words':
+    plt.title('Top 25 Word Frequencies')
+    plt.xlabel('Frequency')
+    plt.ylabel('Word')
+  plt.show()
+
 def unique_labels_word_freq():
 
   mbtiposts, mbtitype = read_split()
@@ -148,6 +168,10 @@ def unique_labels_word_freq():
   # Show counts of personality types of tweets
   unique, counts = np.unique(mbtitype, return_counts=True)
   print(np.asarray((unique, counts)).T)
+
+  # Now to make bar graphs
+  # First for the type frequencies
+  plot_frequency(unique, counts, 'Type')
 
   # Gather list of words
   words = gather_words(mbtiposts)
@@ -161,36 +185,9 @@ def unique_labels_word_freq():
     words_top_25.append(word.title())
     freq_top_25.append(frequency)
 
-  # Now to make bar graphs
-  # First for the type frequencies
-  fig, ax = plt.subplots()
-  width = 0.5
-  ind = np.arange(len(unique))
-  ax.barh(ind, counts, width, color = 'red')
-  ax.set_yticks(ind + width / 2)
-  ax.set_yticklabels(unique, minor = False)
-  for i, v in enumerate(counts):
-    ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
-  plt.title('Personality Type Frequencies')
-  plt.xlabel('Frequency')
-  plt.ylabel('Type')
-  plt.show()
-
   # Now top 25 word frequencies
-  fig, ax = plt.subplots()
-  width = 0.5
   unique, counts = np.array(words_top_25), np.array(freq_top_25)
-  ind = np.arange(len(unique))
-  ax.barh(ind, counts, width, color = 'red')
-  ax.set_yticks(ind + width / 2)
-  ax.set_yticklabels(unique, minor = False)
-  for i, v in enumerate(counts):
-    ax.text(v + 2, i - 0.25, str(v), color = 'blue', fontweight = 'bold')
-  plt.title('Top 25 Word Frequencies')
-  plt.xlabel('Frequency')
-  plt.ylabel('Word')
-  plt.show()
-
+  plot_frequency(unique, counts, 'Words')
 
 
 def word_cloud():
@@ -300,7 +297,7 @@ def linear_SVM_model():
   cross_val(text_clf_two, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_two, svm_parameters, -1, X_train, y_train)
+  grid_search(text_clf_two, svm_parameters, 1, X_train, y_train)
 
 
 def neural_network_model():
@@ -327,7 +324,7 @@ def neural_network_model():
   cross_val(text_clf_three, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_three, nn_parameters, -1, X_train, y_train)
+  grid_search(text_clf_three, nn_parameters, 1, X_train, y_train)
 
 
 if __name__ == '__main__':

@@ -81,13 +81,11 @@ Using the original, four letter types (16 classes) here are the model results:
 | ------  |  --------- |  --------------  |  ------------------------ |   ---------------    |  ----------|
 | Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 0, 'clf__fit_prior': False} 	|  Not sure  |
 | Linear Support Vector Machine  | 0.6717  |   0.3283  |  Accuracy: 0.67 (+/- 0.03)  |  {'clf__alpha': 0.001, 'clf__eta0': 0.25, 'clf__l1_ratio': 0, 'clf__learning_rate': 'optimal', 'clf__penalty': 'l2', 'tfidf__use_idf': True, 'vect__ngram_range': (1, 1)}  |   0.6569   |
-| Multi Layer Perceptron  |   0.6577  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     | Blank  |
+| Multi Layer Perceptron  |   0.6674  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     | Blank  |
 
-*The accuracy and test error rate are based on one train test split model fitting. 
+*The accuracy and test error rate are based on one train test split with model fitting (simplest method). The Optimized Accuracy is the accuracy of the model chosen with the best parameters after optimization* 
 
 As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
-
-** Will be doing hyperparameter tuning shortly **
 
 I will be showcasing a few of the type combinations mentioned earlier; may do more later.
 
@@ -113,7 +111,8 @@ I will be showcasing a few of the type combinations mentioned earlier; may do mo
 		+ Examine the code at the bottom of each part
 		+ Replace *text* with whichever part you'd like to run
 		+ E.g. "tokenize" to tokenize data, "cloud" to create a word cloud, etc.
-+ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory after cloning (not in the `scripts` folder). I have defined the file path to the data 
++ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory (`) after cloning (not in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
+	+ If you would like to change the file path, feel free to do so. 
 
 ### Contributing
 

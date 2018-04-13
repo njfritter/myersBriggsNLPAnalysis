@@ -1,6 +1,33 @@
+#!/usr/bin/env python3
+
+# Myers Briggs Personality Type Tweets Natural Language Processing
+# By Nathan Fritter
+# Project can be found at: 
+# https://www.inertia7.com/projects/109 & 
+# https://www.inertia7.com/projects/110
+
+################
+
 # This is a script that will be our "helper functions"
 # Each model uses them, so I will be setting up the framework here
 # And then importing them into each model script
+
+# But first import necessary packages
+import matplotlib as mpl
+mpl.use('TkAgg') # Need to do this everytime for some reason
+import matplotlib.pyplot as plt
+import random
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import csv
+import re
+import nltk
+import wordcloud
+import os
+import sys
+# Import libraries for model selection and feature extraction
+from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
+metrics, neural_network, model_selection, feature_selection, svm)
 
 unprocessed_data = './data/mbti_1.csv'
 processed_data = './data/mbti_2.csv'
@@ -8,6 +35,37 @@ local_stopwords = np.empty(shape = (10, 1))
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
+
+def basic_output():
+  # Basic stuff
+  print(file.columns)
+  print(file.shape)
+  print(file.head(5))
+  print(file.tail(5))
+
+def tokenize_data():
+  # Tokenize words line by line
+  # Download stopwords here
+  nltk.download('stopwords')
+  # And write to new file so we don't have to keep doing this
+  tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
+  processed = csv.writer(open(processed_data, 'w+'))
+
+  i = 0
+  for line in csv_file:
+    (ptype, posts) = line
+    # Regular expressions
+    words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
+    # Tokenize
+    words = [word.lower() for word in tokenizer.tokenize(words)]
+    words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
+
+    if i % 100 == 0:
+        print(i)
+    i += 1
+
+    processed.writerow([ptype] + [words])
+
 
 def read_split():
   # Split up into types and posts

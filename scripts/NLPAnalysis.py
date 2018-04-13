@@ -1,7 +1,14 @@
-# Welcome to my Myers Briggs Personality Type NLP Project
-# Here I will be analyzing tweets that are labeled by their personality types
-# And seeing if there is 
+#!/usr/bin/env python3
 
+# Myers Briggs Personality Type Tweets Natural Language Processing
+# By Nathan Fritter
+# Project can be found at: 
+# https://www.inertia7.com/projects/109 & 
+# https://www.inertia7.com/projects/110
+
+################
+
+# Import Packages
 import matplotlib as mpl
 mpl.use('TkAgg') # Need to do this everytime for some reason
 import matplotlib.pyplot as plt
@@ -18,7 +25,7 @@ import sys
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
 metrics, neural_network, model_selection, feature_selection, svm)
 
-
+# Set variables for files and file objects
 unprocessed_data = './data/mbti_1.csv'
 processed_data = './data/mbti_2.csv'
 local_stopwords = np.empty(shape = (10, 1))
@@ -27,14 +34,16 @@ file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
 
 # Parameters we will use later to tune
-nb_parameters = {
+# Naive Bayes
+parameters_nb = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
   'clf__alpha': (1e-1, 1e-2, 1e-3),
   'clf__fit_prior': (True, False)
   }
 
-svm_parameters = {
+# Linear Support Vector Machine
+parameters_svm = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
   'clf__alpha': (1e-2, 1e-3),
@@ -44,12 +53,13 @@ svm_parameters = {
   'clf__eta0': (0.25, 0.5, 0.75)
 }
 
-nn_parameters = {
+# Neural Network
+parameters_nn = {
   'vect__ngram_range': [(1, 1), (1, 2)],
   'tfidf__use_idf': (True, False),
-  'clf__learning_rate_init': (1e-2, 1e-3),
-  'clf__hidden_layer_sizes': (25, 50),
-  'clf__activation': ['relu', 'identity', 'tanh', 'logistic']
+  'clf__learning_rate_init': (1e-1, 5e-1),
+  'clf__hidden_layer_sizes': (50, 100),
+  'clf__activation': ['identity', 'tanh', 'relu']
 }
 
 def basic_output():
@@ -63,14 +73,14 @@ def tokenize_data():
   # Tokenize words line by line
   # Download stopwords here
   nltk.download('stopwords')
-  # And write to new file so we don't have to keep doing this
+  # Write to new file so we don't have to keep doing this
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
   processed = csv.writer(open(processed_data, 'w+'))
 
   i = 0
   for line in csv_file:
     (ptype, posts) = line
-    # Regular expressions
+    # Regular expressions filter out hyperlinks & emojis
     words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
     # Tokenize
     words = [word.lower() for word in tokenizer.tokenize(words)]
@@ -83,10 +93,10 @@ def tokenize_data():
     processed.writerow([ptype] + [words])
 
 def read_split():
-  # Split up into types and posts
+  # Split up data into types and posts (tweets)
   processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
-  mbtitype = np.array(processed_file['type'])
-  mbtiposts = np.array(processed_file['posts'])
+  mbtitype = np.array(processed_file['type'], dtype = object)
+  mbtiposts = np.array(processed_file['posts'], dtype = object)
 
   return mbtiposts, mbtitype
 
@@ -143,6 +153,7 @@ def gather_words(posts):
   return words
 
 def plot_frequency(labels, freq, data):
+  # Horizontal Boxplots
   fig, ax = plt.subplots()
   width = 0.5
   ind = np.arange(len(labels))
@@ -188,7 +199,6 @@ def unique_labels_word_freq():
   # Now top 25 word frequencies
   unique, counts = np.array(words_top_25), np.array(freq_top_25)
   plot_frequency(unique, counts, 'Words')
-
 
 def word_cloud():
 
@@ -248,24 +258,27 @@ def naive_bayes_model():
 
   # Naive Bayes model fitting and predictions
   # Building a Pipeline; this does all of the work in intial_model()  
-  text_clf = build_pipeline(naive_bayes.MultinomialNB())
-  text_clf = text_clf.fit(X_train, y_train)
+  text_clf_nb = build_pipeline(naive_bayes.MultinomialNB())
+  text_clf_nb = text_clf_nb.fit(X_train, y_train)
 
   # Evaluate performance on test set
-  predicted = text_clf.predict(X_test)
-  print("The accuracy of the Naive Bayes algorithm is: ") 
-  print(np.mean(predicted == y_test))
-  print("The test error rate of the Naive Bayes algorithm is: ")
-  print(1 - np.mean(predicted == y_test))
+  predicted_nb = text_clf_nb.predict(X_test)
+  print("Training set score: %f" % text_clf_nb.score(X_train, y_train))
+  print("Test set score: %f" % text_clf_nb.score(X_test, y_test))
+  print("Test error rate: %f" % (1 - text_clf_nb.score(X_test, y_test)))
   print("Number of mislabeled points out of a total %d points for the Naive Bayes algorithm : %d"
-    % (X_test.shape[0],(y_test != predicted).sum()))
+    % (X_test.shape[0],(y_test != predicted_nb).sum()))
+
+  # Test set calculations
+  test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nb, rownames = ['class'], colnames = ['predicted'])
+  print(test_crosstb_nb)
 
   # Cross Validation
   mbtiposts, mbtitype = read_split()
-  cross_val(text_clf, mbtiposts, mbtitype)
+  #cross_val(text_clf_nb, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  grid_search(text_clf, nb_parameters, 1, X_train, y_train)
+  #grid_search(text_clf_nb, parameters_nb, 1, X_train, y_train)
 
 def linear_SVM_model():
   # Split data into training and testing sets
@@ -274,30 +287,34 @@ def linear_SVM_model():
   # Linear Support Vector Machine w/ stochastic gradient descent (SGD) learning
   # This model can be other linear models, but using "hinge" makes it a SVM
   # Build Pipeline again
-
-  text_clf_two = build_pipeline(linear_model.SGDClassifier(
+  text_clf_svm = build_pipeline(linear_model.SGDClassifier(
    loss='hinge',
    penalty='l2',
    alpha=1e-3,
    max_iter=5,
    learning_rate = 'optimal',
+   verbose = 10,
    random_state=42))
 
-  text_clf_two = text_clf_two.fit(X_train, y_train)
-  predicted_two = text_clf_two.predict(X_test)
-  print("The accuracy of the Linear SVM is: ")
-  print(np.mean(predicted_two == y_test))
-  print("The test error rate of the Linear SVM algorithm is: ")
-  print(1 - np.mean(predicted_two == y_test))
+  text_clf_svm = text_clf_svm.fit(X_train, y_train)
+
+  # Evaluate performance on test set
+  predicted_svm = text_clf_svm.predict(X_test)
+  print("Training set score: %f" % text_clf_svm.score(X_train, y_train))
+  print("Test set score: %f" % text_clf_svm.score(X_test, y_test))
+  print("Test error rate: %f" % (1 - text_clf_svm.score(X_test, y_test)))
   print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
-    % (X_test.shape[0],(y_test != predicted_two).sum()))
+    % (X_test.shape[0],(y_test != predicted_svm).sum()))
+
+  test_crosstb_svm = pd.crosstab(index = y_test, columns = predicted_svm, rownames = ['class'], colnames = ['predicted'])
+  print(test_crosstb_svm)
 
   # Cross Validation
   mbtiposts, mbtitype = read_split()
-  cross_val(text_clf_two, mbtiposts, mbtitype)
+  #cross_val(text_clf_svm, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  grid_search(text_clf_two, svm_parameters, 1, X_train, y_train)
+  #grid_search(text_clf_svm, parameters_svm, 1, X_train, y_train)
 
 
 def neural_network_model():
@@ -305,26 +322,36 @@ def neural_network_model():
   X_train, X_test, y_train, y_test = train_test_split()
 
   # NEURAL NETWORK
-  text_clf_three = build_pipeline(neural_network.MLPClassifier(
+  text_clf_nn = build_pipeline(neural_network.MLPClassifier(
     hidden_layer_sizes=(50,), 
+    activation = 'identity',
     max_iter=50, 
     alpha=1e-4,
     solver='sgd', 
     verbose=10, 
-    tol=1e-4, 
+    tol=5e-4, 
     random_state=1,
     learning_rate_init=.1))
 
-  text_clf_three.fit(X_train, y_train)
-  print("Training set score: %f" % text_clf_three.score(X_train, y_train))
-  print("Test set score: %f" % text_clf_three.score(X_test, y_test))
+  text_clf_nn.fit(X_train, y_train)
+
+  # Evaluate performance on test set
+  predicted_nn = text_clf_nn.predict(X_test)
+  print("Training set score: %f" % text_clf_nn.score(X_train, y_train))
+  print("Test set score: %f" % text_clf_nn.score(X_test, y_test))
+  print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
+    % (X_test.shape[0],(y_test != predicted_nn).sum()))
+
+  # Test Crosstab results
+  test_crosstb_nn = pd.crosstab(index = y_test, columns = predicted_nn, rownames = ['class'], colnames = ['predicted'])
+  print(test_crosstb_nn)
 
   # Cross Validation Score
   mbtiposts, mbtitype = read_split()
-  cross_val(text_clf_three, mbtiposts, mbtitype)
+  #cross_val(text_clf_nn, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  grid_search(text_clf_three, nn_parameters, 1, X_train, y_train)
+  #grid_search(text_clf_nn, parameters_nn, 1, X_train, y_train)
 
 
 if __name__ == '__main__':

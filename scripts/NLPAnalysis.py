@@ -23,7 +23,7 @@ import os
 import sys
 # Import libraries for model selection and feature extraction
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection, svm)
+metrics, neural_network, model_selection, feature_selection)
 
 # Set variables for files and file objects
 unprocessed_data = './data/mbti_1.csv'
@@ -33,6 +33,10 @@ columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
 
+# Processed data
+processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
+mbtitype = np.array(processed_file['type'], dtype = object)
+mbtiposts = np.array(processed_file['posts'], dtype = object)
 # Parameters we will use later to tune
 # Naive Bayes
 parameters_nb = {
@@ -92,18 +96,8 @@ def tokenize_data():
 
     processed.writerow([ptype] + [words])
 
-def read_split():
-  # Split up data into types and posts (tweets)
-  processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
-  mbtitype = np.array(processed_file['type'], dtype = object)
-  mbtiposts = np.array(processed_file['posts'], dtype = object)
-
-  return mbtiposts, mbtitype
-
 def train_test_split():
   # Split data into training and testing sets
-  mbtiposts, mbtitype = read_split()
-
   X_train, X_test, y_train, y_test = model_selection.train_test_split(
   mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
 
@@ -173,9 +167,6 @@ def plot_frequency(labels, freq, data):
   plt.show()
 
 def unique_labels_word_freq():
-
-  mbtiposts, mbtitype = read_split()
-
   # Show counts of personality types of tweets
   unique, counts = np.unique(mbtitype, return_counts=True)
   print(np.asarray((unique, counts)).T)
@@ -201,9 +192,6 @@ def unique_labels_word_freq():
   plot_frequency(unique, counts, 'Words')
 
 def word_cloud():
-
-  mbtiposts, mbtitype = read_split()
-
   # Gather list of words
   words = gather_words(mbtiposts)
 
@@ -220,6 +208,16 @@ def cross_val(clf, X_train, y_train):
   scores = model_selection.cross_val_score(clf, X_train, y_train, cv = 5)
   print(scores)
   print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+def success_rates(labels, predictions):
+# Display success rate of predictions for each type
+  labels_pred = pd.DataFrame(labels, columns = ['label'])
+  labels_pred['predicted'] = predictions
+  labels_pred['success'] = (labels_pred['predicted'] == labels)
+
+  for name, group in labels_pred.groupby('label'):
+    frac = sum(group['success'])/len(group)
+    print('Success rate for labeling personality type %s: %f' % (name, frac))
 
 def initial_model():
   # Split data into training and testing sets
@@ -274,11 +272,13 @@ def naive_bayes_model():
   print(test_crosstb_nb)
 
   # Cross Validation
-  mbtiposts, mbtitype = read_split()
   #cross_val(text_clf_nb, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
   #grid_search(text_clf_nb, parameters_nb, 1, X_train, y_train)
+
+  # Predictive success rates for each personality type
+  success_rates(y_test, predicted_nb)
 
 def linear_SVM_model():
   # Split data into training and testing sets
@@ -288,7 +288,8 @@ def linear_SVM_model():
   # This model can be other linear models, but using "hinge" makes it a SVM
   # Build Pipeline again
   text_clf_svm = build_pipeline(
-    linear_model.SGDClassifier(random_state=42, verbose = 10))
+    linear_model.SGDClassifier(random_state=42, verbose = 10)
+  )
 
   text_clf_svm = text_clf_svm.fit(X_train, y_train)
 
@@ -304,12 +305,13 @@ def linear_SVM_model():
   print(test_crosstb_svm)
 
   # Cross Validation
-  mbtiposts, mbtitype = read_split()
   #cross_val(text_clf_svm, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
   #grid_search(text_clf_svm, parameters_svm, 1, X_train, y_train)
 
+  # Predictive success rates for each personality type
+  success_rates(y_test, predicted_svm)
 
 def neural_network_model():
   # Split data into training and testing sets
@@ -317,7 +319,7 @@ def neural_network_model():
 
   # NEURAL NETWORK
   text_clf_nn = build_pipeline(
-    neural_network.MLPClassifier(random_state=42), verbose = 10
+    neural_network.MLPClassifier(random_state=42, verbose = 10)
   )
 
   text_clf_nn.fit(X_train, y_train)
@@ -326,6 +328,7 @@ def neural_network_model():
   predicted_nn = text_clf_nn.predict(X_test)
   print("Training set score: %f" % text_clf_nn.score(X_train, y_train))
   print("Test set score: %f" % text_clf_nn.score(X_test, y_test))
+  print("Test error rate: %f" % (1 - text_clf_nn.score(X_test, y_test)))
   print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
     % (X_test.shape[0],(y_test != predicted_nn).sum()))
 
@@ -334,12 +337,13 @@ def neural_network_model():
   print(test_crosstb_nn)
 
   # Cross Validation Score
-  mbtiposts, mbtitype = read_split()
   #cross_val(text_clf_nn, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_nn, parameters_nn, 1, X_train, y_train)
+  #grid_search(text_clf_nn, parameters_nn, n_jobs = 1, X_train, y_train)
 
+  # Predictive success rates for each personality type
+  success_rates(y_test, predicted_nn)
 
 if __name__ == '__main__':
   if len(sys.argv) == 2:

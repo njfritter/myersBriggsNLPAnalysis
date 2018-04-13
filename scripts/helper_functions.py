@@ -84,12 +84,12 @@ def train_test_split():
 
   return X_train, X_test, y_train, y_test
 
-def build_pipeline(model):
+def build_pipeline(vectorizer, tfidf, kbest, model):
   # Build pipelines for models
   text_clf = pipeline.Pipeline([
-   ('vect', feature_extraction.text.CountVectorizer()),
-   ('tfidf', feature_extraction.text.TfidfTransformer()),
-   ('chi2', feature_selection.SelectKBest(feature_selection.chi2, k = 'all')),
+   ('vect', vectorizer),
+   ('tfidf', tfidf),
+   ('chi2', kbest),
    ('clf', model),
   ])
 

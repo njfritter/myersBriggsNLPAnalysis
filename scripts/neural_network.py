@@ -21,20 +21,34 @@ import helper_functions as hf
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
 metrics, neural_network, model_selection, feature_selection, svm)
 
+
+# Neural Network parameters for tuning
+parameters_nn = {
+  'vect__ngram_range': [(1, 1), (1, 2)],
+  'tfidf__use_idf': (True, False),
+  'clf__learning_rate_init': (1e-1, 5e-1),
+  'clf__hidden_layer_sizes': (50, 100),
+  'clf__activation': ['identity', 'tanh', 'relu']
+}
+
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = hf.train_test_split()
 
 # NEURAL NETWORK
-text_clf_nn = hf.build_pipeline(neural_network.MLPClassifier(
-  hidden_layer_sizes=(50,), 
-  activation = 'identity',
-  max_iter=50, 
-  alpha=1e-4,
-  solver='sgd', 
-  verbose=10, 
-  tol=5e-4, 
-  random_state=1,
-  learning_rate_init=.1))
+text_clf_nn = hf.build_pipeline(feature_extraction.text.CountVectorizer(),
+  feature_extraction.text.TfidfTransformer(),
+  feature_selection.SelectKBest(feature_selection.chi2, k = 'all'),
+  neural_network.MLPClassifier(
+    hidden_layer_sizes=(50,), 
+    activation = 'identity',
+    max_iter=50, 
+    alpha=1e-4,
+    solver='sgd', 
+    verbose=10, 
+    tol=5e-4, 
+    random_state=1,
+    learning_rate_init=.1)
+)
 
 text_clf_nn.fit(X_train, y_train)
 

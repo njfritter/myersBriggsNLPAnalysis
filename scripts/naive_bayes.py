@@ -1,14 +1,19 @@
+#!/usr/bin/env python3
+
+# Myers Briggs Personality Type Tweets Natural Language Processing
+# By Nathan Fritter
+# Project can be found at: 
+# https://www.inertia7.com/projects/109 & 
+# https://www.inertia7.com/projects/110
+
+################
+
 # Import Packages
-import matplotlib as mpl
-mpl.use('TkAgg') # Need to do this everytime for some reason
-import matplotlib.pyplot as plt
 import random
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import csv
 import re
-import nltk
-import wordcloud
 import os
 import sys
 import helper_functions as hf
@@ -22,7 +27,12 @@ X_train, X_test, y_train, y_test = hf.train_test_split()
 
 # Naive Bayes model fitting and predictions
 # Building a Pipeline; this does all of the work in intial_model()  
-text_clf_nb = hf.build_pipeline(naive_bayes.MultinomialNB())
+text_clf_nb = hf.build_pipeline(feature_extraction.text.CountVectorizer(ngram_range = (1, 1)),
+  feature_extraction.text.TfidfTransformer(use_idf = False),
+  feature_selection.SelectKBest(feature_selection.chi2, k = 'all'),
+  naive_bayes.MultinomialNB(fit_prior = False, alpha = 0)
+)
+
 text_clf_nb = text_clf_nb.fit(X_train, y_train)
 
 # Evaluate performance on test set

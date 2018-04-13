@@ -79,11 +79,11 @@ Using the original, four letter types (16 classes) here are the model results:
 
 |  Model  |  Accuracy  |  Test Error Rate |  Cross Validation Score   |  Hyperparameter Optimization | Optimized Accuracy |
 | ------  |  --------- |  --------------  |  ------------------------ |   ---------------    |  ----------|
-| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 0, 'clf__fit_prior': False} 	|  Not sure  |
-| Linear Support Vector Machine  | 0.6717  |   0.3283  |  Accuracy: 0.67 (+/- 0.03)  |  {'clf__alpha': 0.001, 'clf__eta0': 0.25, 'clf__l1_ratio': 0, 'clf__learning_rate': 'optimal', 'clf__penalty': 'l2', 'tfidf__use_idf': True, 'vect__ngram_range': (1, 1)}  |   0.6569   |
+| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 0, 'clf__fit_prior': False} 	|  0.3210  |
+| Linear Support Vector Machine  | 0.6615  |   0.3385  |  Accuracy: 0.67 (+/- 0.03)  |  {'clf__alpha': 0.001, 'clf__eta0': 0.25, 'clf__l1_ratio': 0, 'clf__learning_rate': 'optimal', 'clf__penalty': 'l2', 'tfidf__use_idf': True, 'vect__ngram_range': (1, 1)}  |   0.6569   |
 | Multi Layer Perceptron  |   0.6674  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     | Blank  |
 
-*The accuracy and test error rate are based on one train test split with model fitting (simplest method). The Optimized Accuracy is the accuracy of the model chosen with the best parameters after optimization* 
+*The accuracy and test error rate are based on one train test split with model fitting and default parameters(simplest method). The Optimized Accuracy is the accuracy of the model chosen with the best parameters after optimization* 
 
 As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
 
@@ -95,6 +95,7 @@ I will be showcasing a few of the type combinations mentioned earlier; may do mo
 + Download the package `virtualenv`
 	+ Assuming you have made it this far you should have experience with one of `pip/pip3`, `brew` or another package manager
 	+ Here we will use `pip3` (python3 compatible)
+
 + Run the following commands in your terminal (commands compatible with Linux and Mac):
 	+ `virtualenv venv` 
 		+ This creates a virtual environment called "venv"
@@ -103,16 +104,28 @@ I will be showcasing a few of the type combinations mentioned earlier; may do mo
 		+ This turns on the virtual environment and puts you in it
 	+ `pip3 install -r requirements.txt`
 		+ Installs every python package listed in the requirements.txt file
-+ I've made various scripts and places them in the `scripts` folder so one can look at each part individually (`naive_bayes.py` for the Naive Bayes model, `exploratory_analysis.py` which is self-explanatory, etc.)
+
++ I've made various scripts and places them in the `scripts` folder so one can look at each part individually 
+	+ I.e. `naive_bayes.py` for the Naive Bayes model, `exploratory_analysis.py` for exploratory analysis, etc.
 	+ Run `python3 scripts/*anyscript*.py and watch the magic happen!
-	+ Also feel free to change my train test split size, grid search parameters, etc.
-+ However, for those that want everything in one I've made `NLPAnalysis.py`
+	+ Also feel free to change my train test split size, model parameters and see how things change compared to the default parameters in `NLPAnalysis.py`
+		+ These scripts all make use of the general `helper_functions.py` script, which gives the user more flexibility in choosing inputs
+		+ Here, I have specifically chosen inputs that seem to improve model performance. Feel free to change these as well
+
++ For those that want everything in one I've made `NLPAnalysis.py`
 	+ Run `python3 scripts/NLPAnalysis.py *text*`
 		+ Examine the code at the bottom of each part
 		+ Replace *text* with whichever part you'd like to run
 		+ E.g. "tokenize" to tokenize data, "cloud" to create a word cloud, etc.
-+ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory (`) after cloning (not in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
-	+ If you would like to change the file path, feel free to do so. 
+	+ Here there is less stuff to modify, as the point of this script is to get a feel for the models and how they perform with default/chosen parameters 
+		+ The ONLY variables set initially are: 
+			+ `random_state`: ensures the models train on the same subset of data 
+				+ This does not apply to the Naive Bayes model (no such parameter)
+			+ `verbose`: Declares the level of model training progress output
+		+ If you'd like to tune model parameters among other changes, modify the individual scripts mentioned above
+
++ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory exactly how I have written them out (should read ".../..../.../myersBriggsNLPAnalysis" when called the `pwd` command) after cloning (NOT while in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
+	+ If you are a pro and would like to change the file path, go for it!
 
 ### Contributing
 

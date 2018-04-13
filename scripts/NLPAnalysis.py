@@ -287,14 +287,8 @@ def linear_SVM_model():
   # Linear Support Vector Machine w/ stochastic gradient descent (SGD) learning
   # This model can be other linear models, but using "hinge" makes it a SVM
   # Build Pipeline again
-  text_clf_svm = build_pipeline(linear_model.SGDClassifier(
-   loss='hinge',
-   penalty='l2',
-   alpha=1e-3,
-   max_iter=5,
-   learning_rate = 'optimal',
-   verbose = 10,
-   random_state=42))
+  text_clf_svm = build_pipeline(
+    linear_model.SGDClassifier(random_state=42, verbose = 10))
 
   text_clf_svm = text_clf_svm.fit(X_train, y_train)
 
@@ -322,16 +316,9 @@ def neural_network_model():
   X_train, X_test, y_train, y_test = train_test_split()
 
   # NEURAL NETWORK
-  text_clf_nn = build_pipeline(neural_network.MLPClassifier(
-    hidden_layer_sizes=(50,), 
-    activation = 'identity',
-    max_iter=50, 
-    alpha=1e-4,
-    solver='sgd', 
-    verbose=10, 
-    tol=5e-4, 
-    random_state=1,
-    learning_rate_init=.1))
+  text_clf_nn = build_pipeline(
+    neural_network.MLPClassifier(random_state=42), verbose = 10
+  )
 
   text_clf_nn.fit(X_train, y_train)
 

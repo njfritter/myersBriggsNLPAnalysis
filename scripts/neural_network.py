@@ -54,14 +54,23 @@ print("Number of mislabeled points out of a total %d points for the Linear SVM a
   % (X_test.shape[0],(y_test != predicted_nn).sum()))
 
 # Display success rate of predictions for each type
-hf.success_rates(y_test, predicted_nn)
+rates = hf.success_rates(y_test, predicted_nn, return_results = True)
+print(rates)
 
-# Test Crosstab results
-test_crosstb_nn = pd.crosstab(index = y_test, columns = predicted_nn, rownames = ['class'], colnames = ['predicted'])
-print(test_crosstb_nn)
+# Test set calculations
+test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nn, rownames = ['class'], colnames = ['predicted'])
+print(test_crosstb_nb)
+
+# Frequencies of personality types
+labels, counts = hf.unique_labels(y_test, plot = False)
+print(labels, counts)
+
+# Plot success rate versus frequency
+#print(list(counts))
+#print(list(rates.values()))
+hf.scatter_plot(list(counts), list(rates.values())) 
 
 # Cross Validation Score
-#mbtiposts, mbtitype = hf.read_split()
 #cross_val(text_clf_nn, mbtiposts, mbtitype)
 
 # Do a Grid Search to test multiple parameter values

@@ -24,7 +24,7 @@ X_train, X_test, y_train, y_test = hf.train_test_split(test_size = 0.33, random_
 text_clf_nb = hf.build_pipeline(feature_extraction.text.CountVectorizer(ngram_range = (1, 1)),
   feature_extraction.text.TfidfTransformer(use_idf = False),
   feature_selection.SelectKBest(feature_selection.chi2, k = 'all'),
-  naive_bayes.MultinomialNB(fit_prior = False, alpha = 0)
+  naive_bayes.MultinomialNB(fit_prior = False, alpha = 1.0e-10)
 )
 
 text_clf_nb = text_clf_nb.fit(X_train, y_train)
@@ -38,11 +38,21 @@ print("Number of mislabeled points out of a total %d points for the Naive Bayes 
   % (X_test.shape[0],(y_test != predicted_nb).sum()))
 
 # Display success rate of predictions for each type
-hf.success_rates(y_test, predicted_nb)
+rates = hf.success_rates(y_test, predicted_nb, return_results = True)
+print(rates)
 
 # Test set calculations
 test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nb, rownames = ['class'], colnames = ['predicted'])
 print(test_crosstb_nb)
+
+# Frequencies of personality types
+labels, counts = hf.unique_labels(y_test, plot = False)
+print(labels, counts)
+
+# Plot success rate versus frequency
+#print(list(counts))
+#print(list(rates.values()))
+hf.scatter_plot(list(counts), list(rates.values())) 
 
 # Cross Validation
 #cross_val(text_clf_nb, mbtiposts, mbtitype)

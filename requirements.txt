@@ -16,6 +16,7 @@ jupyter==1.0.0
 jupyter-client==5.2.3
 jupyter-console==5.2.0
 jupyter-core==4.4.0
+Keras==2.1.5
 MarkupSafe==1.0
 matplotlib==2.1.2
 mistune==0.8.3
@@ -36,6 +37,7 @@ Pygments==2.2.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2018.3
+PyYAML==3.12
 pyzmq==17.0.0
 qtconsole==4.3.1
 scikit-learn==0.19.1

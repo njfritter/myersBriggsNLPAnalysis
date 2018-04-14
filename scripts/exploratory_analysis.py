@@ -18,5 +18,5 @@ hf.basic_output()
 
 #hf.tokenize_data()
 
-hf.unique_labels(mbtitype)
-hf.word_freq(mbtiposts)
+hf.unique_labels(mbtitype, plot = True)
+hf.word_freq(mbtiposts, plot = True)

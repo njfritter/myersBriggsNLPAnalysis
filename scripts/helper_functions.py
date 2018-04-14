@@ -121,6 +121,17 @@ def gather_words(posts):
 
   return words
 
+def scatter_plot(x, y):
+  # Scatterplot
+  plt.scatter(x, y)
+  # Make trendline 
+  trend = np.polyfit(x, y, 1)
+  p = np.poly1d(trend)
+  # Add to graph
+  plt.plot(x, p(x), 'r--')
+
+  plt.show()
+
 def plot_frequency(labels, freq, data):
   # Horizontal Boxplots
   fig, ax = plt.subplots()
@@ -141,16 +152,19 @@ def plot_frequency(labels, freq, data):
     plt.ylabel('Word')
   plt.show()
 
-def unique_labels(labels):
+def unique_labels(labels, plot):
   # Show counts of personality types of tweets
   unique, counts = np.unique(labels, return_counts=True)
-  print(np.asarray((unique, counts)).T)
 
-  # Now to make bar graphs
-  # First for the type frequencies
-  plot_frequency(unique, counts, 'Type')
+  if plot:
+    # Now to make bar graphs
+    # First for the type frequencies
+    plot_frequency(unique, counts, 'Type')
+    print(np.asarray((unique, counts)).T)
+  else:
+    return unique, counts
 
-def word_freq(word_data):
+def word_freq(word_data, plot):
   # Gather list of words
   words = gather_words(word_data)
 
@@ -163,9 +177,12 @@ def word_freq(word_data):
     words_top_25.append(word.title())
     freq_top_25.append(frequency)
 
-  # Now top 25 word frequencies
-  unique, counts = np.array(words_top_25), np.array(freq_top_25)
-  plot_frequency(unique, counts, 'Words')
+  if plot:
+    # Now top 25 word frequencies
+    unique, counts = np.array(words_top_25), np.array(freq_top_25)
+    plot_frequency(unique, counts, 'Words')
+  else:
+    return unique, counts
 
 def word_cloud():
   # Gather list of words
@@ -185,12 +202,19 @@ def cross_val(clf, X_train, y_train):
   print(scores)
   print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-def success_rates(labels, predictions):
+def success_rates(labels, predictions, return_results):
 # Display success rate of predictions for each type
   labels_pred = pd.DataFrame(labels, columns = ['label'])
   labels_pred['predicted'] = predictions
   labels_pred['success'] = (labels_pred['predicted'] == labels)
 
+  fracs = {}
   for name, group in labels_pred.groupby('label'):
     frac = sum(group['success'])/len(group)
-    print('Success rate for labeling personality type %s: %f' % (name, frac))
+    fracs[name] = frac
+    if not return_results:
+      print('Success rate for labeling personality type %s: %f' % (name, frac))
+  
+  if return_results:
+    return fracs
+      

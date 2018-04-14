@@ -79,7 +79,7 @@ Using the original, four letter types (16 classes) here are the model results:
 
 |  Model  |  Accuracy  |  Test Error Rate |  Cross Validation Score   |  Hyperparameter Optimization | Optimized Accuracy |
 | ------  |  --------- |  --------------  |  ------------------------ |   ---------------    |  ----------|
-| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 0, 'clf__fit_prior': False} 	|  0.3210  |
+| Multinomial Naive Bayes |  0.2169   |  0.7831   | Accuracy: 0.21 (+/- 0.00)  |  {'vect__ngram_range': (1, 1), 'tfidf__use_idf': False, 'clf__alpha': 1.0e-10, 'clf__fit_prior': False} 	|  0.3210  |
 | Linear Support Vector Machine  | 0.6615  |   0.3385  |  Accuracy: 0.67 (+/- 0.03)  |  {'clf__alpha': 0.001, 'clf__eta0': 0.25, 'clf__l1_ratio': 0, 'clf__learning_rate': 'optimal', 'clf__penalty': 'l2', 'tfidf__use_idf': True, 'vect__ngram_range': (1, 1)}  |   0.6716   |
 | Multi Layer Perceptron  |   0.5777  |   0.3423  |  Accuracy: 0.66 (+/- 0.02)   |  Blank     | Blank  |
 

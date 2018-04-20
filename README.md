@@ -195,3 +195,4 @@ Have implemented the grid search, but it takes a while. Am trying to implement a
 
 + http://sdsawtelle.github.io/blog/output/week4-andrew-ng-machine-learning-with-python.html
 + http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base
++ https://github.com/databricks/spark-sklearn

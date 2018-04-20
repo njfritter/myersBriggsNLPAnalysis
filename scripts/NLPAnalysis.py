@@ -286,7 +286,7 @@ def naive_bayes_model():
   #cross_val(text_clf_nb, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  grid_search(text_clf_nb, parameters_nb, 1, X_train, y_train)
+  grid_search(build_pipeline(naive_bayes.MultinomialNB()), parameters_nb, 1, X_train, y_train)
 
   # Predictive success rates for each personality type
   success_rates(y_test, predicted_nb)

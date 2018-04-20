@@ -9,17 +9,11 @@
 ################
 
 # Import Packages
-import random
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-import csv
-import re
-import os
-import sys
 import helper_functions as hf
 # Import libraries for model selection and feature extraction
-from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection, svm)
+from sklearn import neural_network, feature_extraction, feature_selection
 
 
 # Neural Network parameters for tuning
@@ -32,7 +26,7 @@ parameters_nn = {
 }
 
 # Split data into training and testing sets
-X_train, X_test, y_train, y_test = hf.train_test_split()
+X_train, X_test, y_train, y_test = hf.train_test_split(test_size = 0.33, random_state = 42)
 
 # NEURAL NETWORK
 text_clf_nn = hf.build_pipeline(feature_extraction.text.CountVectorizer(),
@@ -45,7 +39,7 @@ text_clf_nn = hf.build_pipeline(feature_extraction.text.CountVectorizer(),
     alpha=1e-4,
     solver='sgd', 
     verbose=10, 
-    tol=5e-4, 
+    tol=1e-4, 
     random_state=1,
     learning_rate_init=.1)
 )
@@ -59,13 +53,23 @@ print("Test set score: %f" % text_clf_nn.score(X_test, y_test))
 print("Number of mislabeled points out of a total %d points for the Linear SVM algorithm: %d"
   % (X_test.shape[0],(y_test != predicted_nn).sum()))
 
-# Test Crosstab results
-test_crosstb_nn = pd.crosstab(index = y_test, columns = predicted_nn, rownames = ['class'], colnames = ['predicted'])
-print(test_crosstb_nn)
+# Display success rate of predictions for each type
+rates = hf.success_rates(y_test, predicted_nn, return_results = True)
+print(rates)
+
+# Test set calculations
+test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nn, rownames = ['class'], colnames = ['predicted'])
+print(test_crosstb_nb)
+
+# Frequencies of personality types
+labels, counts = hf.unique_labels(y_test, plot = False)
+print(labels, counts)
+
+# Plot success rate versus frequency
+hf.scatter_plot(list(counts), list(rates.values())) 
 
 # Cross Validation Score
-mbtiposts, mbtitype = hf.read_split()
 #cross_val(text_clf_nn, mbtiposts, mbtitype)
 
 # Do a Grid Search to test multiple parameter values
-#grid_search(text_clf_nn, parameters_nn, 1, X_train, y_train)
+#grid_search(text_clf_nn, parameters_nn, n_jobs = 1, X_train, y_train)

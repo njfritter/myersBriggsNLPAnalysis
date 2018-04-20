@@ -9,7 +9,7 @@
 ################
 
 # This is a script that will be our "helper functions"
-# Each model uses them, so I will be setting up the framework here
+# Each model script uses them, so I will be setting up the framework here
 # And then importing them into each model script
 
 # But first import necessary packages
@@ -23,18 +23,23 @@ import csv
 import re
 import nltk
 import wordcloud
-import os
-import sys
 # Import libraries for model selection and feature extraction
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection, svm)
+metrics, neural_network, model_selection, feature_selection)
 
+# Unprocessed data
 unprocessed_data = './data/mbti_1.csv'
 processed_data = './data/mbti_2.csv'
 local_stopwords = np.empty(shape = (10, 1))
 columns = np.array(['type', 'posts'])
 file = pd.read_csv(unprocessed_data, names = columns)
 csv_file = csv.reader(open(unprocessed_data, 'rt'))
+
+# Processed data
+# Split up into types and posts
+processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
+mbtitype = np.array(processed_file['type'])
+mbtiposts = np.array(processed_file['posts'])
 
 def basic_output():
   # Basic stuff
@@ -66,21 +71,10 @@ def tokenize_data():
 
     processed.writerow([ptype] + [words])
 
-
-def read_split():
-  # Split up into types and posts
-  processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
-  mbtitype = np.array(processed_file['type'])
-  mbtiposts = np.array(processed_file['posts'])
-
-  return mbtiposts, mbtitype
-
-def train_test_split():
+def train_test_split(test_size, random_state):
   # Split data into training and testing sets
-  mbtiposts, mbtitype = read_split()
-
   X_train, X_test, y_train, y_test = model_selection.train_test_split(
-  mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
+  mbtiposts, mbtitype, test_size = test_size, random_state = random_state)
 
   return X_train, X_test, y_train, y_test
 
@@ -127,7 +121,19 @@ def gather_words(posts):
 
   return words
 
-def plot_frequency(labels, freq):
+def scatter_plot(x, y):
+  # Scatterplot
+  plt.scatter(x, y)
+  # Make trendline 
+  trend = np.polyfit(x, y, 1)
+  p = np.poly1d(trend)
+  # Add to graph
+  plt.plot(x, p(x), 'r--')
+
+  plt.show()
+
+def plot_frequency(labels, freq, data):
+  # Horizontal Boxplots
   fig, ax = plt.subplots()
   width = 0.5
   ind = np.arange(len(labels))
@@ -136,25 +142,31 @@ def plot_frequency(labels, freq):
   ax.set_yticklabels(labels, minor = False)
   for i, v in enumerate(freq):
     ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
-  plt.title('Personality Type Frequencies')
-  plt.xlabel('Frequency')
-  plt.ylabel('Type')
+  if data == 'Type': 
+    plt.title('Personality Type Frequencies')
+    plt.xlabel('Frequency')
+    plt.ylabel('Type')
+  if data == 'Words':
+    plt.title('Top 25 Word Frequencies')
+    plt.xlabel('Frequency')
+    plt.ylabel('Word')
   plt.show()
 
-def unique_labels_word_freq():
-
-  mbtiposts, mbtitype = read_split()
-
+def unique_labels(labels, plot):
   # Show counts of personality types of tweets
-  unique, counts = np.unique(mbtitype, return_counts=True)
-  print(np.asarray((unique, counts)).T)
+  unique, counts = np.unique(labels, return_counts=True)
 
-  # Now to make bar graphs
-  # First for the type frequencies
-  plot_frequency(unique, counts)
+  if plot:
+    # Now to make bar graphs
+    # First for the type frequencies
+    plot_frequency(unique, counts, 'Type')
+    print(np.asarray((unique, counts)).T)
+  else:
+    return unique, counts
 
+def word_freq(word_data, plot):
   # Gather list of words
-  words = gather_words(mbtiposts)
+  words = gather_words(word_data)
 
   words_top_25 = []
   freq_top_25 = []
@@ -165,14 +177,14 @@ def unique_labels_word_freq():
     words_top_25.append(word.title())
     freq_top_25.append(frequency)
 
-  # Now top 25 word frequencies
-  unique, counts = np.array(words_top_25), np.array(freq_top_25)
-  plot_frequency(unique, counts)
+  if plot:
+    # Now top 25 word frequencies
+    unique, counts = np.array(words_top_25), np.array(freq_top_25)
+    plot_frequency(unique, counts, 'Words')
+  else:
+    return unique, counts
 
 def word_cloud():
-
-  mbtiposts, mbtitype = read_split()
-
   # Gather list of words
   words = gather_words(mbtiposts)
 
@@ -189,3 +201,20 @@ def cross_val(clf, X_train, y_train):
   scores = model_selection.cross_val_score(clf, X_train, y_train, cv = 5)
   print(scores)
   print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+def success_rates(labels, predictions, return_results):
+# Display success rate of predictions for each type
+  labels_pred = pd.DataFrame(labels, columns = ['label'])
+  labels_pred['predicted'] = predictions
+  labels_pred['success'] = (labels_pred['predicted'] == labels)
+
+  fracs = {}
+  for name, group in labels_pred.groupby('label'):
+    frac = sum(group['success'])/len(group)
+    fracs[name] = frac
+    if not return_results:
+      print('Success rate for labeling personality type %s: %f' % (name, frac))
+  
+  if return_results:
+    return fracs
+      

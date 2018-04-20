@@ -24,6 +24,7 @@ import sys
 # Import libraries for model selection and feature extraction
 from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
 metrics, neural_network, model_selection, feature_selection)
+import spark_sklearn
 
 # Set variables for files and file objects
 unprocessed_data = './data/mbti_1.csv'
@@ -115,8 +116,18 @@ def build_pipeline(model):
   return text_clf
 
 def grid_search(clf, parameters, jobs, X, y):  
-  # Perform grid search
+  """
   gs_clf = model_selection.GridSearchCV(clf, 
+    param_grid = parameters, 
+    n_jobs = jobs,
+    verbose = 7
+    )
+  gs_clf = gs_clf.fit(X, y)
+  """
+  # Create Spark session
+  sc = spark_sklearn.util.createLocalSparkSession().sparkContext
+  # Perform grid search
+  gs_clf = spark_sklearn.GridSearchCV(sc, estimator = clf, 
     param_grid = parameters, 
     n_jobs = jobs,
     verbose = 7
@@ -275,7 +286,7 @@ def naive_bayes_model():
   #cross_val(text_clf_nb, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_nb, parameters_nb, 1, X_train, y_train)
+  grid_search(text_clf_nb, parameters_nb, 1, X_train, y_train)
 
   # Predictive success rates for each personality type
   success_rates(y_test, predicted_nb)

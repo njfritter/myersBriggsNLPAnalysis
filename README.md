@@ -186,10 +186,12 @@ This project is a work in progress; first it started as an ipython notebook on K
 
 It initially started with no functions just to make sure that it worked. however, I have now separated out the parts into different functions, allowing for the user to input what part they'd like to run. 
 
-I will implement "try/except" functions since this seems to be best practice, and I will also eventually split up the models into different scripts, with one script being a "helper functions" script.
+I will implement "try/except" functions since this seems to be best practice, and I will also eventually split up the models into different scripts, with one script being a "helper functions" script (**Update: This is now done**)
+
+Have implemented the grid search, but it takes a while. Am trying to implement a scikit-learn spark integration to parallelize the process, but running into issues with Java and its JDK :(
 
 
 ### Sources Cited
 
 + http://sdsawtelle.github.io/blog/output/week4-andrew-ng-machine-learning-with-python.html
-+ Will update
++ http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base

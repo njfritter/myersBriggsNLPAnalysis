@@ -66,8 +66,6 @@ labels, counts = hf.unique_labels(y_test, plot = False)
 print(labels, counts)
 
 # Plot success rate versus frequency
-#print(list(counts))
-#print(list(rates.values()))
 hf.scatter_plot(list(counts), list(rates.values())) 
 
 # Cross Validation Score

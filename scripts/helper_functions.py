@@ -13,27 +13,36 @@
 # And then importing them into each model script
 
 # But first import necessary packages
-import matplotlib as mpl
-mpl.use('TkAgg') # Need to do this everytime for some reason
-import matplotlib.pyplot as plt
-import random
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-import csv
-import re
-import nltk
-import wordcloud
-# Import libraries for model selection and feature extraction
-from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection)
+try:
+  import matplotlib as mpl
+  mpl.use('TkAgg') # Need to do this everytime for some reason
+  import matplotlib.pyplot as plt
+  import random
+  import numpy as np # linear algebra
+  import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+  import csv
+  import re
+  import nltk
+  import wordcloud
+  # Import libraries for model selection and feature extraction
+  from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
+  metrics, neural_network, model_selection, feature_selection)
+except ImportError:
+  print("The necessary packages do not seem to be installed",
+    "Please make sure to pip install the necessary packages in \'requirements.txt\'")
 
-# Unprocessed data
-unprocessed_data = './data/mbti_1.csv'
-processed_data = './data/mbti_2.csv'
-local_stopwords = np.empty(shape = (10, 1))
-columns = np.array(['type', 'posts'])
-file = pd.read_csv(unprocessed_data, names = columns)
-csv_file = csv.reader(open(unprocessed_data, 'rt'))
+# Set variables for files and file objects
+try:
+  unprocessed_data = './data/mbti_unprocessed.csv'
+  processed_data = './data/mbti_processed.csv'
+  local_stopwords = np.empty(shape = (10, 1))
+  columns = np.array(['type', 'posts'])
+  file = pd.read_csv(unprocessed_data, names = columns)
+  csv_file = csv.reader(open(unprocessed_data, 'rt'))
+except FileNotFoundError:
+  print("The necessary files do not seem to exist",
+    "Please make sure \'mbti_unprocessed.csv\' and \'mbti_processed.csv\'\
+    exist in the proper file paths states above")
 
 # Processed data
 # Split up into types and posts
@@ -43,10 +52,14 @@ mbtiposts = np.array(processed_file['posts'])
 
 def basic_output():
   # Basic stuff
-  print(file.columns)
-  print(file.shape)
-  print(file.head(5))
-  print(file.tail(5))
+  try:
+    print(file.columns)
+    print(file.shape)
+    print(file.head(5))
+    print(file.tail(5))
+  except AttributeError:
+    print("The files do not seem to be in the proper format.",
+    "Did you read in the files as a pandas object?")
 
 def tokenize_data():
   # Tokenize words line by line

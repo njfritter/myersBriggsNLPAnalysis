@@ -9,35 +9,45 @@
 ################
 
 # Import Packages
-import matplotlib as mpl
-mpl.use('TkAgg') # Need to do this everytime for some reason
-import matplotlib.pyplot as plt
-import random
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-import csv
-import re
-import nltk
-import wordcloud
-import os
-import sys
-# Import libraries for model selection and feature extraction
-from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection)
-import spark_sklearn
+try:
+  import matplotlib as mpl
+  mpl.use('TkAgg') # Need to do this everytime for some reason
+  import matplotlib.pyplot as plt
+  import random
+  import numpy as np # linear algebra
+  import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+  import csv
+  import re
+  import nltk
+  import wordcloud
+  import os
+  import sys
+  # Import libraries for model selection and feature extraction
+  from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
+  metrics, neural_network, model_selection, feature_selection)
+  import spark_sklearn
+except ImportError:
+  print("The necessary packages do not seem to be installed",
+    "Please make sure to pip install the necessary packages in \'requirements.txt\'")
 
 # Set variables for files and file objects
-unprocessed_data = './data/mbti_1.csv'
-processed_data = './data/mbti_2.csv'
-local_stopwords = np.empty(shape = (10, 1))
-columns = np.array(['type', 'posts'])
-file = pd.read_csv(unprocessed_data, names = columns)
-csv_file = csv.reader(open(unprocessed_data, 'rt'))
+try:
+  unprocessed_data = './data/mbti_unprocessed.csv'
+  processed_data = './data/mbti_processed.csv'
+  local_stopwords = np.empty(shape = (10, 1))
+  columns = np.array(['type', 'posts'])
+  file = pd.read_csv(unprocessed_data, names = columns)
+  csv_file = csv.reader(open(unprocessed_data, 'rt'))
+except FileNotFoundError:
+  print("The necessary files do not seem to exist",
+    "Please make sure \'mbti_unprocessed.csv\' and \'mbti_processed.csv\'\
+    exist in the proper file paths states above")
 
 # Processed data
 processed_file = pd.read_csv(processed_data, names = columns, skiprows = [0])
 mbtitype = np.array(processed_file['type'], dtype = object)
 mbtiposts = np.array(processed_file['posts'], dtype = object)
+
 # Parameters we will use later to tune
 # Naive Bayes
 parameters_nb = {
@@ -69,10 +79,14 @@ parameters_nn = {
 
 def basic_output():
   # Basic stuff
-  print(file.columns)
-  print(file.shape)
-  print(file.head(5))
-  print(file.tail(5))
+  try:
+    print(file.columns)
+    print(file.shape)
+    print(file.head(5))
+    print(file.tail(5))
+  except AttributeError:
+    print("The files do not seem to be in the proper format.",
+    "Did you read in the files as a pandas object?")
 
 def tokenize_data():
   # Tokenize words line by line
@@ -82,27 +96,34 @@ def tokenize_data():
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
   processed = csv.writer(open(processed_data, 'w+'))
 
-  i = 0
-  for line in csv_file:
-    (ptype, posts) = line
-    # Regular expressions filter out hyperlinks & emojis
-    words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
-    # Tokenize
-    words = [word.lower() for word in tokenizer.tokenize(words)]
-    words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
+  try:
+    i = 0
+    for line in csv_file:
+      (ptype, posts) = line
+      # Regular expressions filter out hyperlinks & emojis
+      words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
+      # Tokenize
+      words = [word.lower() for word in tokenizer.tokenize(words)]
+      words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
 
-    if i % 100 == 0:
-        print(i)
-    i += 1
+      if i % 100 == 0:
+          print(i)
+      i += 1
 
-    processed.writerow([ptype] + [words])
+      processed.writerow([ptype] + [words])
+  except AttributeError:
+    print("The files do not seem to be in the proper format.",
+    "Did you read in the files as a pandas object?")
 
 def train_test_split():
   # Split data into training and testing sets
-  X_train, X_test, y_train, y_test = model_selection.train_test_split(
-  mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
+  try:
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(
+    mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
 
-  return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test
+  except ImportError:
+    print("The necessary packages do not seem to be installed")
 
 def build_pipeline(model):
   # Build pipelines for models
@@ -124,15 +145,19 @@ def grid_search(clf, parameters, jobs, X, y):
     )
   gs_clf = gs_clf.fit(X, y)
   """
-  # Create Spark session
-  sc = spark_sklearn.util.createLocalSparkSession().sparkContext
-  # Perform grid search
-  gs_clf = spark_sklearn.GridSearchCV(sc, estimator = clf, 
-    param_grid = parameters, 
-    n_jobs = jobs,
-    verbose = 7
-    )
-  gs_clf = gs_clf.fit(X, y)
+  try:
+    # Create Spark session
+    sc = spark_sklearn.util.createLocalSparkSession().sparkContext
+    # Perform grid search
+    gs_clf = spark_sklearn.GridSearchCV(sc, estimator = clf, 
+      param_grid = parameters, 
+      n_jobs = jobs,
+      verbose = 7
+      )
+    gs_clf = gs_clf.fit(X, y)
+  except java.lang.IllegalArgumentException:
+    print("The necessary java environment is not installed",
+      "Make sure that you have a JDK set up for Spark distributed computing.")
 
   """
   best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
@@ -246,11 +271,13 @@ def initial_model():
   # Training a classifer
   clf = naive_bayes.MultinomialNB()
   clf = clf.fit(X_train_tfidf, y_train)
-  INTJ_sentence = ['Writing college essays is stressful because I have to give a stranger a piece of myself and that piece has to incorporate all of who I am']
+  INTJ_sentence = ['Writing college essays is stressful because I have to give a stranger\
+   a piece of myself and that piece has to incorporate all of who I am']
   INTJ_X_new_counts = count_vect.transform(INTJ_sentence)
   INTJ_X_new_tfidf = tfidf_transformer.transform(INTJ_X_new_counts)
 
-  ENFP_sentence = ['Our favorite friendships are the ones where you can go from talking about the latest episode of the Bachelorette to the meaning of life']
+  ENFP_sentence = ['Our favorite friendships are the ones where you can go\
+   from talking about the latest episode of the Bachelorette to the meaning of life']
   ENFP_X_new_counts = count_vect.transform(ENFP_sentence)
   ENFP_X_new_tfidf = tfidf_transformer.transform(ENFP_X_new_counts)
   # Make a prediction of test sentence
@@ -319,7 +346,11 @@ def linear_SVM_model():
   #cross_val(text_clf_svm, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_svm, parameters_svm, 1, X_train, y_train)
+  """
+  grid_search(build_pipeline(
+    linear_model.SGDClassifier(random_state=42, verbose = 10)
+  ), parameters_svm, 1, X_train, y_train)
+  """
 
   # Predictive success rates for each personality type
   success_rates(y_test, predicted_svm)
@@ -351,7 +382,11 @@ def neural_network_model():
   #cross_val(text_clf_nn, mbtiposts, mbtitype)
 
   # Do a Grid Search to test multiple parameter values
-  #grid_search(text_clf_nn, parameters_nn, n_jobs = 1, X_train, y_train)
+  """
+  grid_search(build_pipeline(
+    neural_network.MLPClassifier(random_state=42, verbose = 10)
+  ), parameters_nn, n_jobs = 1, X_train, y_train)
+  """
 
   # Predictive success rates for each personality type
   success_rates(y_test, predicted_nn)

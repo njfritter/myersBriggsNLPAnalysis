@@ -69,27 +69,34 @@ def tokenize_data():
   tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
   processed = csv.writer(open(processed_data, 'w+'))
 
-  i = 0
-  for line in csv_file:
-    (ptype, posts) = line
-    # Regular expressions
-    words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
-    # Tokenize
-    words = [word.lower() for word in tokenizer.tokenize(words)]
-    words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
+  try:
+    i = 0
+    for line in csv_file:
+      (ptype, posts) = line
+      # Regular expressions filter out hyperlinks & emojis
+      words = re.sub(r"(?:\@|https?\://)\S+", "", posts)
+      # Tokenize
+      words = [word.lower() for word in tokenizer.tokenize(words)]
+      words = [word for word in words if word not in nltk.corpus.stopwords.words('english') and word not in local_stopwords]
 
-    if i % 100 == 0:
-        print(i)
-    i += 1
+      if i % 100 == 0:
+          print(i)
+      i += 1
 
-    processed.writerow([ptype] + [words])
+      processed.writerow([ptype] + [words])
+  except AttributeError:
+    print("The files do not seem to be in the proper format.",
+    "Did you read in the files as a pandas object?")
 
 def train_test_split(test_size, random_state):
   # Split data into training and testing sets
-  X_train, X_test, y_train, y_test = model_selection.train_test_split(
-  mbtiposts, mbtitype, test_size = test_size, random_state = random_state)
+  try:
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(
+    mbtiposts, mbtitype, test_size = 0.33, random_state = 42)
 
-  return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test
+  except ImportError:
+    print("The necessary packages do not seem to be installed")
 
 def build_pipeline(vectorizer, tfidf, kbest, model):
   # Build pipelines for models
@@ -104,12 +111,27 @@ def build_pipeline(vectorizer, tfidf, kbest, model):
 
 def grid_search(clf, parameters, jobs, X, y):  
   # Perform grid search
+  """
   gs_clf = model_selection.GridSearchCV(clf, 
     param_grid = parameters, 
     n_jobs = jobs,
     verbose = 7
     )
   gs_clf = gs_clf.fit(X, y)
+  """
+  try:
+    # Create Spark session
+    sc = spark_sklearn.util.createLocalSparkSession().sparkContext
+    # Perform grid search
+    gs_clf = spark_sklearn.GridSearchCV(sc, estimator = clf, 
+      param_grid = parameters, 
+      n_jobs = jobs,
+      verbose = 7
+      )
+    gs_clf = gs_clf.fit(X, y)
+  except java.lang.IllegalArgumentException:
+    print("The necessary java environment is not installed",
+      "Make sure that you have a JDK set up for Spark distributed computing.")
 
   """
   best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])

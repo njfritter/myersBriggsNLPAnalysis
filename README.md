@@ -165,7 +165,7 @@ We can deduce a couple of things here:
 		+ If you'd like to tune model parameters among other changes, modify the individual scripts mentioned above
 			+ The default parameters can be found in the docs [here](http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base)
 
-i. **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory exactly how I have written them out (should read `.../..../.../myersBriggsNLPAnalysis` when called the `pwd` command) after cloning (NOT while in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
++ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory exactly how I have written them out (should read `.../..../.../myersBriggsNLPAnalysis` when called the `pwd` command) after cloning (NOT while in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
 	+ If you are a pro and would like to change the file path, go for it!
 
 ### Contributing
@@ -189,6 +189,8 @@ It initially started with no functions just to make sure that it worked. however
 I will implement "try/except" functions since this seems to be best practice, and I will also eventually split up the models into different scripts, with one script being a "helper functions" script (**Update: This is now done**)
 
 Have implemented the grid search, but it takes a while. Am trying to implement a scikit-learn spark integration to parallelize the process, but running into issues with Java and its JDK :(
+
+*[Here](https://www.quickprogrammingtips.com/big-data/how-to-install-hadoop-on-mac-os-x-el-capitan.html) are the docs to set up hadoop and other dependencies to run spark. Having a tough time implementing them, so I will come back to this*
 
 
 ### Sources Cited

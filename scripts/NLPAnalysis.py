@@ -1,43 +1,36 @@
 #!/usr/bin/env python3
 
+################################################################
 # Myers Briggs Personality Type Tweets Natural Language Processing
 # By Nathan Fritter
 # Project can be found at: 
 # https://www.inertia7.com/projects/109 & 
 # https://www.inertia7.com/projects/110
-
-################
+################################################################
 
 # Import Packages
-try:
-    import matplotlib as mpl
-    mpl.use('TkAgg') # Need to do this everytime for some reason
-    import matplotlib.pyplot as plt
-    import random
-    import numpy as np # linear algebra
-    import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-    import csv
-    import re
-    import nltk
-    import wordcloud
-    import os
-    import sys
-    # Import libraries for model selection and feature extraction
-    from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-    metrics, neural_network, model_selection, feature_selection)
-    import spark_sklearn
-except ImportError:
-print("The necessary packages do not seem to be installed",
-"Please make sure to pip install the necessary packages in \'requirements.txt\'")
+import matplotlib as mpl
+mpl.use('TkAgg') # Need to do this everytime for some reason
+import matplotlib.pyplot as plt
+import random
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import re
+import nltk
+import wordcloud
+import os
+import sys
+# Import libraries for model selection and feature extraction
+from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
+metrics, neural_network, model_selection, feature_selection)
+#import spark_sklearn
 
 # Set variables for files and file objects
 try:
     unprocessed_data = 'data/mbti_unprocessed.csv'
     processed_data = 'data/mbti_processed.csv'
-    local_stopwords = np.empty(shape = (10, 1))
     columns = np.array(['type', 'posts'])
     file = pd.read_csv(unprocessed_data, names = columns)
-    csv_file = csv.reader(open(unprocessed_data, 'rt'))
 except FileNotFoundError:
     print("The necessary files do not seem to exist\n",
     "Please make sure \'mbti_unprocessed.csv\' and \'mbti_processed.csv\'\
@@ -51,42 +44,33 @@ mbtiposts = np.array(processed_file['posts'], dtype = object)
 # Parameters we will use later to tune
 # Naive Bayes
 parameters_nb = {
-'vect__ngram_range': [(1, 1), (1, 2)],
-'tfidf__use_idf': (True, False),
-'clf__alpha': (1e-1, 1e-2, 1e-3),
-'clf__fit_prior': (True, False)
+    'vect__ngram_range': [(1, 1), (1, 2)],
+    'tfidf__use_idf': (True, False),
+    'clf__alpha': (1e-1, 1e-2, 1e-3),
+    'clf__fit_prior': (True, False)
 }
 
 # Linear Support Vector Machine
 parameters_svm = {
-'vect__ngram_range': [(1, 1), (1, 2)],
-'tfidf__use_idf': (True, False),
-'clf__alpha': (1e-2, 1e-3),
-'clf__penalty': ['l2', 'l1', 'elasticnet'],
-'clf__l1_ratio': (0, 0.5, 1),
-'clf__learning_rate': ['optimal'],
-'clf__eta0': (0.25, 0.5, 0.75)
+    'vect__ngram_range': [(1, 1), (1, 2)],
+    'tfidf__use_idf': (True, False),
+    'clf__alpha': (1e-2, 1e-3),
+    'clf__penalty': ['l2', 'l1', 'elasticnet'],
+    'clf__l1_ratio': (0, 0.5, 1),
+    'clf__learning_rate': ['optimal'],
+    'clf__eta0': (0.25, 0.5, 0.75)
 }
 
 # Neural Network
 parameters_nn = {
-'vect__ngram_range': [(1, 1), (1, 2)],
-'tfidf__use_idf': (True, False),
-'clf__learning_rate_init': (1e-1, 5e-1),
-'clf__hidden_layer_sizes': (50, 100),
-'clf__activation': ['identity', 'tanh', 'relu']
+    'vect__ngram_range': [(1, 1), (1, 2)],
+    'tfidf__use_idf': (True, False),
+    'clf__learning_rate_init': (1e-1, 5e-1),
+    'clf__hidden_layer_sizes': (50, 100),
+    'clf__activation': ['identity', 'tanh', 'relu']
 }
 
-def basic_output():
-# Basic stuff
-try:
-print(file.columns)
-print(file.shape)
-print(file.head(5))
-print(file.tail(5))
-except AttributeError:
-print("The files do not seem to be in the proper format.\n",
-"Did you read in the files as a pandas object?")
+
 
 def tokenize_data():
 # Tokenize words line by line

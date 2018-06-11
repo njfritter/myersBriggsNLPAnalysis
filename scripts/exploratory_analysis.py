@@ -8,18 +8,16 @@
 # https://www.inertia7.com/projects/110
 ################################################################
 
-# This is a script that is dedicated to the exploratory analysis of this project
-# This includes words and type frequencies, word clouds, and the tokenization process
-# But first import necessary packages 
+##################
+# Import packages
+##################
 import helper_functions as hf
-from helper_functions import mbtitype, mbtiposts
 from data_extraction_cleanup import raw_df, raw_type, raw_posts
 from data_extraction_cleanup import long_df, long_type, long_posts
-from data_extraction_cleanup import wide_df, wide_type, wide_posts
+from data_extraction_cleanup import clean_df, clean_type, clean_posts
 import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
-import nltk
 
 # Confirm we are in the correct directory, otherwise break script 
 # and prompt user to move to correct directory
@@ -95,3 +93,13 @@ plt.imshow(cloud, interpolation = 'bilinear')
 plt.axis("off")
 plt.savefig('images/wordcloud.png')
 plt.show()
+
+print('''
+	----------------------------------------------
+	- HASHTAG, RETWEET, MENTION, URL FREQUENCIES -
+	----------------------------------------------
+	''')
+
+# Find every instance of hashtags, retweets, mentions
+# Using string matching patterns
+

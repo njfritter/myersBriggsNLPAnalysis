@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
 
+################################################################
 # Myers Briggs Personality Type Tweets Natural Language Processing
 # By Nathan Fritter
 # Project can be found at: 
 # https://www.inertia7.com/projects/109 & 
 # https://www.inertia7.com/projects/110
+################################################################
 
-################
-
-# This is a script that will be our "helper functions"
-# Each model script uses them, so I will be setting up the framework here
-# And then importing them into each model script
-
-# But first import necessary packages
+##################
+# Import packages
+##################
 import matplotlib as mpl
 mpl.use('TkAgg') # Need to do this everytime for some reason
 import matplotlib.pyplot as plt
-import random
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-import re
-import nltk
+import numpy as np
+import pandas as pd
+import re, nltk, string
+from nltk.corpus import stopwords
 import wordcloud
-# Import libraries for model selection and feature extraction
-from sklearn import (datasets, naive_bayes, feature_extraction, pipeline, linear_model,
-metrics, neural_network, model_selection, feature_selection)
+import os
+from multiprocessing import cpu_count, Pool
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.pipeline import Pipeline
 
 
 # Confirm we are in the correct directory, otherwise break script 
@@ -37,8 +35,122 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
     if you are unsure of your location in the terminal.')
     sys.exit(1)
 
+##########################################
+# DEFINE VARIABLES FOR TEXT PRE-PROCESSING
+##########################################
+
+columns = np.array(['type', 'posts'])
+
+# Download stopwords & make list of stopwords so we don't have to reinitialize it every loop
+nltk.download('stopwords')
+stop_list = stopwords.words('english') + list(string.punctuation)
+
+'''
+Specific parsing strategy from:
+https://marcobonzanini.com/2015/03/09/mining-twitter-data-with-python-part-2/
+It involves treating mentions, retweets, hashtags, as their own entity
+Feel free to change the code below as necessary if you want to try new things
+'''
+
+# This will be an attempt to tokenize emoticons into their own tokens
+emoticons_str = r'''
+    (?:
+        [:=;] # Eyes
+        [oO\-]? # Nose (optional)
+        [D\)\]\(\]/\\OpPd] # Mouth
+    )'''
+
+# Everything else Twitter related
+regex_str = [
+    emoticons_str,
+    r'<[^>]+>', # HTML tags
+    r'(?:@[\w_]+)', # @-mentions
+    r'(?:\#+[\w_]+[\w\'_\-]*[\w_]+)', # hashtags
+    r'http[s]?://(?:[a-z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-f][0-9a-f]))+', # URLS
+    r'(?:(?:\d+,?)+(?:\.?\d+)?)', # Numbers 
+    r'(?:[a-z][a-z\'\-_]+[a-z])', # Words with dashes (-) and apostrophes (')
+    r'(?:[\w_]+)', # Other words
+    r'(?:\S)' # Anything else?
+]
+
+# Compile the above string patterns into two tokenizers
+# VERBOSE allows spaces in regex to be ignored, IGNORECASE will catch both lower and uppercase
+# https://docs.python.org/3.4/library/re.html#re.verbose
+token_re = re.compile(r'('+'|'.join(regex_str)+')', re.VERBOSE | re.IGNORECASE)
+emoticon_re = re.compile(r'^' + emoticons_str + '$', re.VERBOSE | re.IGNORECASE)
+
+#########################################################
+# FUNCTIONS WE WILL BE USING/IMPORTING INTO OTHER SCRIPTS
+#########################################################
+
+def remove_stopwords(text):
+    '''
+    Purpose: Remove english stopwords, punctuation, and any manually declared stopwords
+
+    Inputs:
+    - Text: tokenized string
+    '''
+    clean_words = [term for term in text if term not in stop_list]
+
+def check_emoticons(tokens, lowercase = False):
+    '''
+    Purpose: Check if there is any emoticon in the word, skip lowercasing
+
+    Inputs:
+    - Tokens: tokenized strings (from 'tokenize_data' function)
+    '''
+    if lowercase:
+        tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
+    return tokens
+
+def tokenize_data(df):
+    '''
+    Purpose: Tokenize data according to strategy coded above
+
+    Inputs:
+    - df: Pandas dataframe containing at least one text column to be tokenized
+    '''
+    # Create empty dataframe for results
+    split_df = pd.DataFrame(columns = columns)
+
+    for idx, row in df.iterrows():
+
+        # Split tweets into individual tweets
+        tweets_split = row['posts'].split('|||')
+
+        # Grab personality type since we're analyzing one row of data at a time
+        ptype = pd.Series(row['type'], name = 'type')
+
+        # Iterate through list of tweets for each user
+        for tweet in tweets_split:
+
+            # Tokenize data
+            tokenized_tweets = [token for token in token_re.findall(tweet)]
+
+            # Check for emoticons so we don't lowercase them
+            tokenized_tweets = check_emoticons(tokenized_tweets)
+
+            # Turn tweets into a series object, then append
+            tweet_object = pd.Series(tokenized_tweets, name = 'posts')
+            line = pd.concat([ptype, tweet_object], axis = 1)
+            split_df = pd.concat([split_df, line])
+
+        # Print progress, as this step takes a while
+        if idx % 100 == 0:
+            print('Row %s of %s done' % (idx, df.shape[0]))
+
+    return split_df
+
 
 def plot_frequency(labels, freq, data):
+    '''
+    Purpose: Plot frequencies as a bar graph depending on data given
+
+    Inputs:
+    - labels: names associated with frequencies supplied
+    - freq: counts of the labels mentioned above
+    - data: type of data supplied (words or personality types)
+    '''
     # Horizontal Boxplots
     labels = np.array(labels)
     freq = np.array(freq)
@@ -49,7 +161,7 @@ def plot_frequency(labels, freq, data):
     ax.set_yticks(ind + width / 2)
     ax.set_yticklabels(labels, minor = False)
     for i, v in enumerate(freq):
-    ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
+        ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
     if data == 'Types': 
         plt.title('Personality Type Frequencies')
         plt.xlabel('Frequency')
@@ -65,78 +177,134 @@ def plot_frequency(labels, freq, data):
 
 
 def build_pipeline(vectorizer, tfidf, kbest, model):
-  # Build pipelines for models
-  text_clf = pipeline.Pipeline([
-   ('vect', vectorizer),
-   ('tfidf', tfidf),
-   ('chi2', kbest),
-   ('clf', model),
-  ])
+    '''
+    Purpose: Combine different parts of a machine learning model together
+    
+    Inputs:
+    - vectorizer: count vectorizer object to handle n-gram instances
+    - tfidf: Term Frequency Inverse Document Frequency object (common NLP technique)
+    - chi2: feature selection object using chi-squared analysis
+    - clf: machine learning classifier object (scikit-learn)
+    '''
+    text_clf = Pipeline([
+        ('vect', vectorizer),
+        ('tfidf', tfidf),
+        ('chi2', kbest),
+        ('clf', model),
+    ])
 
-  return text_clf
+return text_clf
 
 def grid_search(clf, parameters, jobs, X, y):  
-  # Perform grid search
-  gs_clf = model_selection.GridSearchCV(clf, 
+    '''
+    Purpose: Run parameter tuning in parallel
+
+    Inputs:
+    - clf: machine learning classifier object (scikit-learn)
+    - parameters: grid of parameters and possible values to choose from
+    - jobs: number of CPUs to utilize on machine (use -1 for all CPUs)
+    - X: attributes of data
+    - y: response variable of data
+    '''
+    gs_clf = GridSearchCV(clf, 
     param_grid = parameters, 
     n_jobs = jobs,
     verbose = 7
     )
-  gs_clf = gs_clf.fit(X, y)
+    gs_clf = gs_clf.fit(X, y)
 
-  best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
-  for param_name in sorted(parameters.keys()):
-    print("%s: %r" % (param_name, best_parameters[param_name]))
-  print(score)
+    best_parameters, score, _ = max(gs_clf.grid_scores_, key = lambda x: x[1])
+    for param_name in sorted(parameters.keys()):
+        print("%s: %r" % (param_name, best_parameters[param_name]))
+    print(score)
 
-  print(gs_clf.cv_results_)
+    print(gs_clf.cv_results_)
 
 def gather_words(posts):
-  
-  words = []
-  for tweet in posts:
+    '''
+    Purpose: Split up words into one object for wordcloud analysis
+
+    Inputs:
+    - posts: tokenized string data
+    '''
+    words = []
+    for tweet in posts:
     # Split tweet into words by comma
     # Or else iterator splits by letter, not word
     tweet_words = tweet.split(',')
     for word in tweet_words:
-      # Remove brackets at end of tweet and quotes
-      word = re.sub(r"]", "", word)
-      word = re.sub(r"\'", "", word)
-      words.append(word)
+        # Remove brackets at end of tweet and quotes
+        word = re.sub(r"]", "", word)
+        word = re.sub(r"\'", "", word)
+        words.append(word)
 
-  return words
+    return words
 
-def scatter_plot(x, y):
-  # Scatterplot
-  plt.scatter(x, y)
-  # Make trendline 
-  trend = np.polyfit(x, y, 1)
-  p = np.poly1d(trend)
-  # Add to graph
-  plt.plot(x, p(x), 'r--')
+def scatter_plot(X, y):
+    '''
+    Purpose: Create scatterplot of data
 
-  plt.show()
+    Inputs: 
+    - X: attributes of data
+    - y: response variable of data
+    '''
+    # Scatterplot
+    plt.scatter(X, y)
+    # Make trendline 
+    trend = np.polyfit(X, y, 1)
+    p = np.poly1d(trend)
+    # Add to graph
+    plt.plot(X, p(X), 'r--')
+    plt.show()
 
 
 def cross_val(clf, X_train, y_train):
-  # Cross Validation Score
-  scores = model_selection.cross_val_score(clf, X_train, y_train, cv = 5)
-  print(scores)
-  print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+    '''
+    Purpose: Compute cross validation score of machine learning model
+
+    Inputs:
+    - clf: machine learning classifier object (scikit-learn)
+    - X_train: training set of attributes for data
+    - y_train: training set of responses for data
+    '''
+    scores = cross_val_score(clf, X_train, y_train, cv = 5)
+    print(scores)
+    print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
 def success_rates(labels, predictions, return_results):
-# Display success rate of predictions for each type
-  labels_pred = pd.DataFrame(labels, columns = ['label'])
-  labels_pred['predicted'] = predictions
-  labels_pred['success'] = (labels_pred['predicted'] == labels)
+    '''
+    Purpose: Display success rate of predictions for each type
 
-  fracs = {}
-  for name, group in labels_pred.groupby('label'):
-    frac = sum(group['success'])/len(group)
-    fracs[name] = frac
-    if not return_results:
-      print('Success rate for labeling personality type %s: %f' % (name, frac))
-  
-  if return_results:
-    return fracs
-      
+    Inputs:
+    - labels: names associated with predictive accuracies
+    - predictions: predictive accuracy of the various labels
+    - return_results: boolean to return results if true, print if false
+    '''
+    labels_pred = pd.DataFrame(labels, columns = ['label'])
+    labels_pred['predicted'] = predictions
+    labels_pred['success'] = (labels_pred['predicted'] == labels)
+    fracs = {}
+    for name, group in labels_pred.groupby('label'):
+        frac = sum(group['success'])/len(group)
+        fracs[name] = frac
+    if return_results:
+        return fracs
+    else:
+        print('Success rate for labeling personality type %s: %f' % (name, frac))
+
+def parallelize(func, df):
+    '''
+    Purpose: Parallelize some of the computationally intensive functions
+
+    Inputs: 
+    - func: function we want to apply
+    - df: dataframe to apply function to
+    '''
+    partitions = cpu_count()
+    df_subsets = np.array_split(df, partitions)
+    pool = Pool(partitions)
+    end_df = pd.concat(pool.map(func, df_subsets))
+    pool.close()
+    pool.join()
+
+    return end_df

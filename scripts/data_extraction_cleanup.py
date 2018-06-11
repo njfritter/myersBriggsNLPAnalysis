@@ -29,7 +29,7 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 	if you are unsure of your location in the terminal.')
 	sys.exit(1)
 
-raw_data = 'data/mbti_raw.csv'
+raw_data = 'data/mbti_1.csv'
 wide_data = 'data/mbti_wide.csv'
 token_data = 'data/mbti_tokenized.csv'
 clean_data = 'data/mbti_cleaned.csv'

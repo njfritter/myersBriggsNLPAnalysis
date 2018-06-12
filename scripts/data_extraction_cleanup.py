@@ -56,17 +56,17 @@ Check helper_function for more detail on tokenization method used
 '''
 
 start = time.time()
-token_df = hf.parallelize(func = hf.tokenize_data, df = raw_df)	
+token_df = hf.parallelize(func = hf.tokenize_data, df = raw_df)
 end = time.time()
 elapsed = end - start
 print('Time elapsed: %.2f' % elapsed)
 
-print(token_df.shape)
-print(token_df.head(10))
+print('Tokenized Data Shape:', token_df.shape)
+print('Head of Tokenized Data:', token_df.head(10))
 
 # Write to csv
 token_df.to_csv(token_data, columns = list(token_df.columns.values), index = False)
-"""
+
 ##################
 # Remove stopwords
 ##################
@@ -80,7 +80,8 @@ I will be analyzing the data with stopwords included, but would also like a copy
 For analysis as well as use for the machine learning models I will be implementing
 '''
 start = time.time()
-clean_df = hf.remove_stopwords(raw_df)
+#clean_df = hf.parallelize(func = hf.tokenize_data(remove_stopwords = True), df = raw_df)
+clean_df = hf.tokenize_data(raw_df, filter_stopwords = True)
 end = time.time()
 elapsed = end - start
 print('Time elapsed: %.2f' % elapsed)
@@ -129,4 +130,6 @@ X_train_token, X_test_token, y_train_token, y_test_token = train_test_split(
 
 X_train_wide, X_test_wide, y_train_wide, y_test_wide = train_test_split(
 	wide_posts, wide_type, test_size = 0.30, random_state = 42)
-"""
+
+X_train_clean, X_test_clean, y_train_clean, y_test_clean = train_test_split(
+	clean_posts, clean_type, test_size = 0.30, random_state = 42)

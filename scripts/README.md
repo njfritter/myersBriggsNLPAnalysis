@@ -17,7 +17,7 @@ It is getting big however, so I may divide it up based on what category the func
 
 ### The Other Scripts
 
-<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/otherguys.jpeg">
+<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/otherguys.jpeg" style="width: 150px">
 
 #### Exploratory Analysis
 

@@ -75,24 +75,24 @@ It is a simplistic view that is prone to overgeneralizing, but one that can have
 	
 3. Run the following commands in your terminal (compatible with Linux and Mac):
 
-Creating a virtual environment called **YOUR-VIRTUAL-ENV**:
+I. Creating a virtual environment called **YOUR-VIRTUAL-ENV**:
 
 ```
 $ virtualenv YOUR-VIRTUAL-ENV
 ```
 Replace **YOUR-VIRTUAL-ENV** with what you'd like to name your environment
 
-Turn on the virtual environment and place you inside:
+II. Turn on the virtual environment and place you inside:
 ```
 $ source YOUR-VIRTUAL-ENV/bin/activate
 ```
 
-Install necessary packages from `requirements.txt`
+III. Install necessary packages from `requirements.txt`
 ```
 $ pip3 install -r requirements.txt
 ```
 
-Create necessary files for exploratory analysis and model building:
+IV. Create necessary files for exploratory analysis and model building:
 ```
 $ python3 scripts/data_extraction_cleanup.py
 ```

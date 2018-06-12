@@ -16,7 +16,6 @@ import sys, os
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from multiprocessing import cpu_count, Pool
 import helper_functions as hf
 
 # Confirm we are in the correct directory, otherwise break script 

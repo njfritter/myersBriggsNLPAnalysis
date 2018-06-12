@@ -1,37 +1,56 @@
 # Myers Briggs Personality Type Natural Language Processing Project
 
-## Inspired by the Kaggle competition [here](https://www.kaggle.com/datasnaek/mbti-type)
+## Introduction
+My name is Nathan Fritter and I am obsessed with data. I have a B.S. in Applied Statistics from UCSB and was an active member of the Data Science club @ UCSB. This is one of various projects I have completed to vairous degrees; Feel free to take a look at any and all other projects and make suggestions. 
 
-### Introduction
-My name is Nathan Fritter and I am obsessed with data. I have a B.S. in Applied Statistics from UCSB and was an active member of the Data Science club @ UCSB. I have completed numerous projects utilizing various methods, have presented my findings to others and sat on the executive board of the club. Feel free to take a look at any and all other projects and make suggestions. 
+## The Project
 
-### The Project
-This project is based on the Kaggle competition linked above. Tweets from various accounts on Twitter (all with an accompanying personality type) were gathered together; each account has anywhere from a couple to 20+ tweets each. 
+This project is based on the Kaggle competition [here](https://www.kaggle.com/datasnaek/mbti-type)
 
-My goal here is to remove the noise (stop words), categorize the data (tokenize), and use things such as word frequencies and sentence orientation to try and predict the personality type of the user. 
+Tweets from various accounts on Twitter (all with an accompanying personality type) were gathered together; each account has a personality type, along with the last 50 tweets for each user.
 
-For this project, I utilized three different methods known for success in Natural Language Processing (NLP): 
-+ Multinomial Naive Bayes Model (target variable has more than 2 classes)
+At first, my goal was to tokenize the data (turn into individual words or parts) remove ALL the noise (stop words, hyperlinks, hashtags, etc.), and use the tokenized inputs try and predict the personality type of the user.
+
+However, I realized that I was leaving alot to be desired with respect to exploratory analysis. Instead of simply just getting word and type frequency, I realized I could be looking for so much more (hashtag/mention/retweet/url frequency, n-gram occurences, etc.). Thus I have revamped the project to include alot more on the exploratory analysis side.
+
+I also have learned alot about data cleanup, manipulation, storing data in different ways, and more that I hope becomes clear in my code.
+
+I utilized three different Machine Learning models known for success in Natural Language Processing (NLP): 
++ Multinomial Naive Bayes
 + Linear Support Vector Machine
-+ Multi Layer Perceptron (simple Neural Network)
++ Neural Network
 
-I have attempted to make comments outlining my thought process. Feel free to clone the repo, make a branch, leave comments or contribute in any way you'd like.
+The project is split up into different sections tht you may look at individually:
++ Data Extraction/Cleanup
++ Exploratory Analysis
++ Naive Bayes
++ Linear Support Vector Machine
++ Neural Network
 
-### What is the Myers Briggs Personality Type?
+Currently the only version I have this for is *Python*; versions in *R* and *pyspark* are currently in the works.
 
-The Myers Briggs Personality Type is based on psychological theory around how people perceive their world and then make accompanying judgements about these perceptions. 
+**NOTE:** `data_extraction_cleanup.py` and `helper_functions.py` are used to abstract functions for the other scripts for readability (i.e. using a function called `tokenize_data` from `helper_functions.py` to tokenize data, creating different versions of data for the other scripts to import, etc.).
 
-It is a rather simplistic view, but one that does have surprising effectiveness at predicting people's behaviors in general when taking into account the limitations of the theory. There are four categories:
+Since the other scripts use these scripts heavily, if you would like to make changes to this project give them a look.
+
+## What is the Myers Briggs Personality Type?
+
+The Myers Briggs Personality Type is based on psychological theory about how people perceive their world and make accompanying judgements about these perceptions. 
+
+It is a simplistic view that is prone to overgeneralizing, but one that can have surprising effectiveness at predicting people's behaviors in general when taking into account the limitations of the theory. There are four categories:
 
 + Extroverted/Introverted (E/I):
-	+ Rather than the mainstream view that this distinction means talkative versus antisocial (and other similar variations), this difference actually stems from where one derives their energy from.
-		+ Extroverts gain energy from being around other people: talking, conversing, being noticed, etc. They are capable of being alone, but will get tired out without contact with others.
-		+ Introverts gain energy from being alone. Being alone and allowed to let their thoughts flow is very energizing, and allows one to clear their head (coming from personal experience). Opposite to extroverts, introverts have the capability to socialize and be the center of attention quite effectively; but after a while, even a five minute break alone may be necessary.
+	+ Rather than the mainstream view that this distinction means talkative versus antisocial, this difference stems from where one gets their energy:
+		+ Extroverts gain energy from being around other people: talking, conversing, being noticed, etc. 
+		    + They can be alone, but will get tired without contact
+		+ Introverts gain energy from being alone and clearing their thoughts
+		    + Being alone and allowed to let their thoughts flow is very energizing (coming from personal experience). 
+		    + Opposite to extroverts, introverts have the capability to socialize quite effectively; but after a while, even five minutes can do wonders.
 
 + Intuitive/Sensory (N/S):
 	+ Here, the differences lie in how the individual perceives their world. The two domains here are either through the five senses (immediate environment) or within their mind.
-		+ Intuitives (N) are better at perceiving their world through their mind and imagining possibilities in the world. 
-		+ Sensories (S) are better at perceiving their world through their five senses
+		+ Intuitives (N) are better at perceiving the world through their mind and imagining abstract possibilities in the world. 
+		+ Sensories (S) are better at perceiving the world through the five senses.
 
 + Thinking/Feeling (T/F):
 	+ This domain deals with how the individual judges the information they have perceived: Either the individual makes judgments in a Thinking (T) way or a Feeling (F) way
@@ -40,14 +59,61 @@ It is a rather simplistic view, but one that does have surprising effectiveness 
 
 + Judgmental/Perceiving (J/P):
 	+ Lastly (and a little more complicated), this domain basically states whether the perceiving trait or the judging trait is the dominant trait of the individual
-		+ Judgers (J) will have their judging trait be their dominant overall trait
-		+ Perceivers (P) will have their perceiving trait be their dominant overall trait
+		+ Judgers (J) have their judging trait be their dominant overall trait
+		+ Perceivers (P) have their perceiving trait be their dominant overall trait
 
-[Here](http://www.myersbriggs.org/my-mbti-personality-type/mbti-basics/) is more in depth detail on the theory and the complexities behind it. 
+[Here](http://www.myersbriggs.org/my-mbti-personality-type/mbti-basics/) is more in depth detail on the theory (Kaggle site has info as well)/ 
 
-### General Analysis & Findings
-In a sentiment analysis project, there are some limitations on the types of analysis one can do. What we CAN do, is things like word frequencies/clouds, label frequencies, remove stop words and use these remaining words to build a model predicting the target class (personality type).
+## Reproducing Results on Your Local Machine
 
+1. Clone the repo onto your machine (instructions [here](https://help.github.com/articles/cloning-a-repository/) if you are not familiar)
+
+2. *OPTIONAL:* Download the package `virtualenv`
+    + I prefer using virtual environments to run code since there will be no package conflicts with anything in `requirements.txt`
+    + Here we will use `pip3 install virtualenv` (python3 compatible)
+	+ Feel free to use another package manager such as `brew`
+	
+3. Run the following commands in your terminal (compatible with Linux and Mac):
+
+Creating a virtual environment called **YOUR-VIRTUAL-ENV**:
+
+```
+$ virtualenv YOUR-VIRTUAL-ENV
+```
+Replace **YOUR-VIRTUAL-ENV** with what you'd like to name your environment
+
+Turn on the virtual environment and place you inside:
+```
+$ source YOUR-VIRTUAL-ENV/bin/activate
+```
+
+Install necessary packages from `requirements.txt`
+```
+$ pip3 install -r requirements.txt
+```
+
+Create necessary files for exploratory analysis and model building:
+```
+$ python3 scripts/data_extraction_cleanup.py
+```
+This will create the following files
+    + `mbti_tokenized.csv` (Tokenized data with stopwords)
+    + `mbti_cleaned.csv` (Tokenized data without stopwords)
+
+**IMPORTANT:** To make sure these scripts run properly, run the code from the main directory after cloning (i.e. do not change directories before running scripts). I have added code that grabs the current working directory and makes sure it ends with `myersBriggsNLPAnalysis`; if it does not, the scripts will not run.
+
+Example for running scripts:
+```
+$ python3 scripts/any-script.py
+```
+
+4. Run any of the other scripts and watch the magic!
+
+## General Analysis & Findings
+
+### Exploratory Analysis
+
+Here I will delve into the various different insights I have mined through this data
 #### Word Frequencies (Top 25; no change after stop words are removed) 
 
 <img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/wordfrequencylabeled.png" style = "width: 150px;"/>
@@ -56,12 +122,14 @@ In a sentiment analysis project, there are some limitations on the types of anal
 
 <img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/wordcloud.png" style = "width: 150px;"/>
 
-#### Label (Personality Type) Frequencies
+### Label (Personality Type) Frequencies
 
 <img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/typefrequencylabeled.png" style = "width: 150px;"/>
 
 
-Clearly this may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" shows up the most, and disproportionally so. Because of this, there will likely be something called "class imbalance": this is where some classes are represented much more highly than others.  
+The variance in the frequency of personality types may be an issue down the line; "INFP", "INFJ", "INTP", and "INTJ" show up the most, and disproportionally so.
+
+Because of this, there will likely be something called "class imbalance": this is where some classes are represented much more highly than others.  
 
 Also, complexity does not always make models better. The fact that there are sixteen different classes would impact any model's performance.
 
@@ -69,11 +137,10 @@ As a next step, I will alter the types to look at specific type combination diff
 + E vs I, N vs S, T vs F, J vs P
 + NT vs NF vs SF vs ST
 + NJ vs NP vs SJ vs SP
-+ Etc.
 
-Whichever method I choose should reduce error and increase accuracy due to increased simplicity of the model.
+Whichever method I choose should reduce error and increase accuracy due to increased simplicity of the model (however any simplification will lead to information lost, so there is a trade-off).
 
-#### Model Metrics
+### Model Metrics
 
 Using the original, four letter types (16 classes) here are the model results:
 
@@ -86,11 +153,9 @@ Using the original, four letter types (16 classes) here are the model results:
 *The accuracy and test error rate are based on one train test split with model fitting and default parameters(simplest method).*
 * The Optimized Accuracy is the accuracy of the model chosen with the best parameters after optimization, as well as the cross validation results.* 
 
-As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more all interfere with data quality).
+As we can see, the accuracy of these methods will be fairly limited due to the large number of classes (and the shortcomings of using tweets as data, where slang, hyperlinks and more contribute to making the data noisy).
 
-I will be showcasing a few of the type combinations mentioned earlier; may do more later.
-
-#### Personality Type Prediction Results
+### Personality Type Prediction Results
 
 Here are the success rates of each model predicting each personality type:
 
@@ -116,10 +181,11 @@ Here are the success rates of each model predicting each personality type:
 |  ISTP  |  0.000000  |  0.583333  |  0.703704 |
 
 We can deduce a couple of things here:
-+  The Naive Bayes model is NOT a good choice for this data, as it consistently has trouble predicting the underrepresented classes 
-	+ The model only was able to give six different classes in its predictions (all of the "INxx" types plus "ENFP" and "ENTP")
-	+ These six types happened to be the top 6 types in terms of number of tweets
-	+ This is a case where the model's simplicity ends up hurting it; it is highly reliant on seeing many examples of a class to predict it accuractely
++  Naive Bayes is NOT a good choice for this data, as it consistently has trouble predicting the underrepresented classes 
+	+ The model only was able to give six different classes in its predictions 
+	    + All of the "INxx" types plus "ENFP" and "ENTP")
+	    + These six types happened to be the top 6 types in frequency
+	+ This is a case where the model's simplicity ends up hurting it; it is highly reliant on seeing many examples of a class to predict it accurately
 + No matter what model, the four "INxx" personality types seem to be predicted pretty well. Within that, the "INFP" type is predicted very well
 	+ This is consistent with the fact that those four have the most tweets, as well as "INFP" having the most overall
 	+ The "ENxx" types have the second most, and they have reasonable performance (including actual predictions from Naive Bayes)
@@ -128,47 +194,7 @@ We can deduce a couple of things here:
 	+ There are some exceptions ("ENTJ", "ISFJ", and "ISTP"), but for the most part this is to be expected: The more data you have of a certain class, the better a model will be able to correctly predict it on new data
 
 
-### Steps to Reproduction
-
-1. Clone the repo onto your machine (instructions [here](https://help.github.com/articles/cloning-a-repository/) if you are not familiar)
-
-2. Download the package `virtualenv`
-	+ Assuming you have made it this far you should have experience with one of `pip/pip3`, `brew` or another package manager
-	+ Here we will use `pip3` (python3 compatible)
-
-3. Run the following commands in your terminal (commands compatible with Linux and Mac):
-	+ `virtualenv venv` 
-		+ This creates a virtual environment called "venv"
-		+ Feel free to change the second word to whatever you'd like to call it
-	+ `source venv/bin/activate` 
-		+ This turns on the virtual environment and puts you in it
-	+ `pip3 install -r requirements.txt`
-		+ Installs every python package listed in the requirements.txt file
-
-4. I've made various scripts and places them in the `scripts` folder so one can look at each part individually 
-	+ I.e. `naive_bayes.py` for the Naive Bayes model, `exploratory_analysis.py` for exploratory analysis, etc.
-	+ Run `python3 scripts/*anyscript*.py and watch the magic happen!
-	+ Also feel free to change my train test split size, model parameters and see how things change compared to the default parameters in `NLPAnalysis.py`
-		+ These scripts all make use of the general `helper_functions.py` script, which gives the user more flexibility in choosing inputs
-		+ Here, I have specifically chosen inputs that seem to improve model performance. Feel free to change these as well
-
-5. For those that want everything in one I've made `NLPAnalysis.py`
-	+ Run `python3 scripts/NLPAnalysis.py *text*`
-		+ Examine the code at the bottom of each part
-		+ Replace *text* with whichever part you'd like to run
-		+ E.g. "tokenize" to tokenize data, "cloud" to create a word cloud, etc.
-	+ Here there is less stuff to modify, as the point of this script is to get a feel for the models and how they perform with default/chosen parameters 
-		+ The ONLY variables set initially are: 
-			+ `random_state`: ensures the models train on the same subset of data 
-				+ This does not apply to the Naive Bayes model (no such parameter)
-			+ `verbose`: Declares the level of model training progress output
-		+ If you'd like to tune model parameters among other changes, modify the individual scripts mentioned above
-			+ The default parameters can be found in the docs [here](http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base)
-
-+ **IMPORTANT:** To make sure these scripts run properly, run the code above from the main directory exactly how I have written them out (should read `.../..../.../myersBriggsNLPAnalysis` when called the `pwd` command) after cloning (NOT while in the `scripts` folder). I have defined the file path to the data based on being in the main directory.
-	+ If you are a pro and would like to change the file path, go for it!
-
-### Contributing
+## Contributing
 
 If you would like to contribute:
 + Create a new branch to work on (instructions [here](https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches))
@@ -178,23 +204,14 @@ If you would like to contribute:
 + Submit changes as a pull request with any relevant information commented
 	+ Reaching out in some way would also be great to help speed up the process
 
-If you do contribute, I will add your name as a contributor!
+If you do contribute, I will add your name as a contributor! I am always iterating on this project, and any feedback would be greatly welcomed!
 
-### Iterations
-
-This project is a work in progress; first it started as an ipython notebook on Kaggle, then I translated the work to a script.
-
-It initially started with no functions just to make sure that it worked. however, I have now separated out the parts into different functions, allowing for the user to input what part they'd like to run. 
-
-I will implement "try/except" functions since this seems to be best practice, and I will also eventually split up the models into different scripts, with one script being a "helper functions" script (**Update: This is now done**)
-
-Have implemented the grid search, but it takes a while. Am trying to implement a scikit-learn spark integration to parallelize the process, but running into issues with Java and its JDK :(
-
-*[Here](https://www.quickprogrammingtips.com/big-data/how-to-install-hadoop-on-mac-os-x-el-capitan.html) are the docs to set up hadoop and other dependencies to run spark. Having a tough time implementing them, so I will come back to this*
 
 
 ### Sources Cited
 
-+ http://sdsawtelle.github.io/blog/output/week4-andrew-ng-machine-learning-with-python.html
-+ http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base
-+ https://github.com/databricks/spark-sklearn
++ [Classification with Neural Nets Using MLP Classifier](http://sdsawtelle.github.io/blog/output/week4-andrew-ng-machine-learning-with-python.html)
++ [Machine Learning Models with Scikit-Learn](http://scikit-learn.org/stable/modules/classes.html#module-sklearn.base)
++ [Mining Twitter Data with Marco Bonzanini](https://marcobonzanini.com/2015/03/09/mining-twitter-data-with-python-part-2/)
++ [6 Easy Steps to Learn Naive Bayes](https://www.analyticsvidhya.com/blog/2017/09/naive-bayes-explained/)
++ [A Practical Explanation of a Naive Bayes Classifier](https://monkeylearn.com/blog/practical-explanation-naive-bayes-classifier/)

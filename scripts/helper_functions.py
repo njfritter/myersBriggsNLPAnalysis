@@ -19,7 +19,7 @@ import pandas as pd
 import re, nltk, string
 from nltk.corpus import stopwords
 import wordcloud
-import os
+import os, sys
 from multiprocessing import cpu_count, Pool
 from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -88,10 +88,11 @@ def remove_stopwords(text):
     Purpose: Remove english stopwords, punctuation, and any manually declared stopwords
 
     Inputs:
-    - Text: tokenized string
+    - text: tokenized string data to parse
     '''
     clean_words = [term for term in text if term not in stop_list]
-
+    return clean_words
+    
 def check_emoticons(tokens, lowercase = False):
     '''
     Purpose: Check if there is any emoticon in the word, skip lowercasing
@@ -103,15 +104,19 @@ def check_emoticons(tokens, lowercase = False):
         tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
     return tokens
 
-def tokenize_data(df):
+def tokenize_data(df, filter_stopwords = False):
     '''
     Purpose: Tokenize data according to strategy coded above
 
     Inputs:
     - df: Pandas dataframe containing at least one text column to be tokenized
+
+    NOTE: Here I am making a list, appending the values to the list, and turning into a dataframe
+    I am doing this because if I were to use dataframes and append, 
+    there would be a new dataframe made every time "append" is called
     '''
-    # Create empty dataframe for results
-    split_df = pd.DataFrame(columns = columns)
+    # Create empty list for results and conversion to DataFrame later
+    split_list = []
 
     for idx, row in df.iterrows():
 
@@ -119,7 +124,8 @@ def tokenize_data(df):
         tweets_split = row['posts'].split('|||')
 
         # Grab personality type since we're analyzing one row of data at a time
-        ptype = pd.Series(row['type'], name = 'type')
+        #ptype = pd.Series(row['type'], name = 'type')
+        ptype = row['type']
 
         # Iterate through list of tweets for each user
         for tweet in tweets_split:
@@ -130,15 +136,18 @@ def tokenize_data(df):
             # Check for emoticons so we don't lowercase them
             tokenized_tweets = check_emoticons(tokenized_tweets)
 
-            # Turn tweets into a series object, then append
-            tweet_object = pd.Series(tokenized_tweets, name = 'posts')
-            line = pd.concat([ptype, tweet_object], axis = 1)
-            split_df = pd.concat([split_df, line])
+            # Remove stopwords if declared
+            if filter_stopwords:
+                tokenized_tweets = remove_stopwords(tokenized_tweets)
+
+            # Append to list
+            split_list.append([ptype, tokenized_tweets])
 
         # Print progress, as this step takes a while
         if idx % 100 == 0:
             print('Row %s of %s done' % (idx, df.shape[0]))
 
+    split_df = pd.DataFrame(split_list, columns = columns, dtype = object)
     return split_df
 
 
@@ -193,7 +202,7 @@ def build_pipeline(vectorizer, tfidf, kbest, model):
         ('clf', model),
     ])
 
-return text_clf
+    return text_clf
 
 def grid_search(clf, parameters, jobs, X, y):  
     '''
@@ -229,14 +238,14 @@ def gather_words(posts):
     '''
     words = []
     for tweet in posts:
-    # Split tweet into words by comma
-    # Or else iterator splits by letter, not word
-    tweet_words = tweet.split(',')
-    for word in tweet_words:
-        # Remove brackets at end of tweet and quotes
-        word = re.sub(r"]", "", word)
-        word = re.sub(r"\'", "", word)
-        words.append(word)
+        # Split tweet into words by comma
+        # Or else iterator splits by letter, not word
+        tweet_words = tweet.split(',')
+        for word in tweet_words:
+            # Remove brackets at end of tweet and quotes
+            word = re.sub(r"]", "", word)
+            word = re.sub(r"\'", "", word)
+            words.append(word)
 
     return words
 

@@ -96,7 +96,7 @@ IV. Create necessary files for exploratory analysis and model building:
 ```
 $ python3 scripts/data_extraction_cleanup.py
 ```
-This will create the following files
+This will create the following files:
     + `mbti_tokenized.csv` (Tokenized data with stopwords)
     + `mbti_cleaned.csv` (Tokenized data without stopwords)
 

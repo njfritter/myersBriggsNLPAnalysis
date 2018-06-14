@@ -232,14 +232,14 @@ def gather_words(posts):
 
     return words
 
-def plot_wordcloud(posts):
+def plot_wordcloud(posts, save_image = False):
     '''
     Purpose: Given a column of words, gather them and plot a wordcloud
 
     Inputs: 
     posts: column of words from pandas df
     '''
-    individual_words = hf.gather_words(posts)
+    individual_words = gather_words(posts)
     wordcloud_words = ' '.join(individual_words)
 
     # Lower max font size
@@ -248,6 +248,9 @@ def plot_wordcloud(posts):
     plt.imshow(cloud, interpolation = 'bilinear')
     plt.axis("off")
     plt.show()
+
+    if save_image:
+        plt.savefig('images/wordcloud.png')
 
 def scatter_plot(X, y):
     '''

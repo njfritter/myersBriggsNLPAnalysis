@@ -101,18 +101,7 @@ print('''
 	- DISPLAYING CLEANED WORD CLOUD -
 	---------------------------------
 	''')
-
-# Gather list of words using helper function
-individual_words = hf.gather_words(clean_posts)
-wordcloud_words = ' '.join(individual_words)
-
-# Lower max font size
-cloud = wordcloud.WordCloud(max_font_size = 40).generate(wordcloud_words)
-plt.figure()
-plt.imshow(cloud, interpolation = 'bilinear')
-plt.axis("off")
-plt.savefig('images/wordcloud.png')
-plt.show()
+hf.plot_wordcloud(clean_posts, save_image = True)
 
 print('''
 	----------------------------------------------

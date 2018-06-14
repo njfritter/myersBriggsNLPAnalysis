@@ -85,7 +85,14 @@ def remove_stopwords(text):
 
     Inputs:
     - text: tokenized string data to parse
+
+    Returns:
+    - clean_words: list of words with stopwords removed
     '''
+    # Download stopwords & make list of stopwords here so we don't download every time
+    nltk.download('stopwords')
+    stop_list = stopwords.words('english') + list(string.punctuation)
+
     clean_words = [term for term in text if term not in stop_list]
     return clean_words
     
@@ -94,7 +101,10 @@ def check_emoticons(tokens, lowercase = False):
     Purpose: Check if there is any emoticon in the word, skip lowercasing
 
     Inputs:
-    - Tokens: tokenized strings (from 'tokenize_data' function)
+    - tokens: tokenized strings (from 'tokenize_data' function)
+
+    Returns:
+    - tokens: tokenized strings with emoticon casing preserved
     '''
     if lowercase:
         tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
@@ -107,12 +117,14 @@ def tokenize_data(df, filter_stopwords = False):
     Inputs:
     - df: Pandas dataframe containing at least one text column to be tokenized
 
+    Returns:
+    - token_df: Pandas dataframe with text column containing lists of tokenized strings
+
     NOTE: Here I am making a list, appending the values to the list, and turning into a dataframe
-    I am doing this because if I were to use dataframes and append, 
-    there would be a new dataframe made every time "append" is called
+    Rather than appending dataframes to each other every iteration as that is not as efficient
     '''
     # Create empty list for results and conversion to DataFrame later
-    split_list = []
+    token_list = []
 
     for idx, row in df.iterrows():
 
@@ -135,56 +147,17 @@ def tokenize_data(df, filter_stopwords = False):
             # Remove stopwords if declared
             if filter_stopwords:
 
-                # Download stopwords & make list of stopwords here so we don't download every time
-                nltk.download('stopwords')
-                stop_list = stopwords.words('english') + list(string.punctuation)
-
                 tokenized_tweets = remove_stopwords(tokenized_tweets)
 
             # Append to list
-            split_list.append([ptype, tokenized_tweets])
+            token_list.append([ptype, tokenized_tweets])
 
         # Print progress, as this step takes a while
         if idx % 100 == 0:
             print('Row %s of %s done' % (idx, df.shape[0]))
 
-    split_df = pd.DataFrame(split_list, columns = columns, dtype = object)
-    return split_df
-
-
-def plot_frequency(labels, freq, data):
-    '''
-    Purpose: Plot frequencies as a bar graph depending on data given
-
-    Inputs:
-    - labels: names associated with frequencies supplied
-    - freq: counts of the labels mentioned above
-    - data: type of data supplied (words or personality types)
-    '''
-    # Horizontal Boxplots
-    labels = np.array(labels)
-    freq = np.array(freq)
-    fig, ax = plt.subplots()
-    width = 0.5
-    ind = np.arange(len(labels))
-    ax.barh(ind, freq, width, color = 'red')
-    ax.set_yticks(ind + width / 2)
-    ax.set_yticklabels(labels, minor = False)
-    for i, v in enumerate(freq):
-        ax.text(v + 2, i - 0.125, str(v), color = 'blue', fontweight = 'bold')
-    if data == 'Types': 
-        plt.title('Personality Type Frequencies')
-        plt.xlabel('Frequency')
-        plt.ylabel('Type')
-        plt.savefig('images/typefrequencylabeled.png')
-    if data == 'Words':
-        plt.title('Top 25 Word Frequencies')
-        plt.xlabel('Frequency')
-        plt.ylabel('Word')
-        plt.savefig('images/wordfrequencylabeled.png')
-    
-    plt.show()
-
+    token_df = pd.DataFrame(token_list, columns = columns, dtype = object)
+    return token_df
 
 def build_pipeline(vectorizer, tfidf, kbest, model):
     '''
@@ -195,6 +168,9 @@ def build_pipeline(vectorizer, tfidf, kbest, model):
     - tfidf: Term Frequency Inverse Document Frequency object (common NLP technique)
     - chi2: feature selection object using chi-squared analysis
     - clf: machine learning classifier object (scikit-learn)
+
+    Returns:
+    - text_clf: a machine learning classifier object for training and evaluation
     '''
     text_clf = Pipeline([
         ('vect', vectorizer),
@@ -232,10 +208,13 @@ def grid_search(clf, parameters, jobs, X, y):
 
 def gather_words(posts):
     '''
-    Purpose: Split up words into one object for wordcloud analysis
+    Purpose: Split up words into one object for wordcloud and word frequency analysis 
 
     Inputs:
     - posts: tokenized string data
+
+    Returns:
+    - words: list of words without brackets
     '''
     words = []
     for tweet in posts:
@@ -244,11 +223,31 @@ def gather_words(posts):
         tweet_words = tweet.split(',')
         for word in tweet_words:
             # Remove brackets at end of tweet and quotes
-            word = re.sub(r"]", "", word)
-            word = re.sub(r"\'", "", word)
+            word = re.sub(r']', '', word)
+            word = re.sub(r'\'', '', word)
+            word = re.sub(r'\"', '', word)
+            word = re.sub(r'\[', '', word)
+            word = word.strip()
             words.append(word)
 
     return words
+
+def plot_wordcloud(posts):
+    '''
+    Purpose: Given a column of words, gather them and plot a wordcloud
+
+    Inputs: 
+    posts: column of words from pandas df
+    '''
+    individual_words = hf.gather_words(posts)
+    wordcloud_words = ' '.join(individual_words)
+
+    # Lower max font size
+    cloud = wordcloud.WordCloud(max_font_size = 40).generate(wordcloud_words)
+    plt.figure()
+    plt.imshow(cloud, interpolation = 'bilinear')
+    plt.axis("off")
+    plt.show()
 
 def scatter_plot(X, y):
     '''
@@ -266,7 +265,6 @@ def scatter_plot(X, y):
     # Add to graph
     plt.plot(X, p(X), 'r--')
     plt.show()
-
 
 def cross_val(clf, X_train, y_train):
     '''
@@ -309,6 +307,8 @@ def parallelize(func, df):
     Inputs: 
     - func: function we want to apply
     - df: dataframe to apply function to
+    Returns:
+    - end_df: dataframe from result of function
     '''
     partitions = cpu_count()
     df_subsets = np.array_split(df, partitions)
@@ -318,3 +318,17 @@ def parallelize(func, df):
     pool.join()
 
     return end_df
+
+def find_pattern(df, text_column, pattern):
+    '''
+    Purpose: Extract rows with text based on pattern given
+
+    Inputs:
+    - df: pandas dataframe we are analyzing
+    - text_column: column with text to analyze (inputted as string)
+    - pattern: regex pattern we want to search for (inputted as string)
+    '''
+    rows = df[df[text_column].str.contains(pattern)]
+    #rows = df[df[text_column].str.findall(pattern)]
+
+    return rows

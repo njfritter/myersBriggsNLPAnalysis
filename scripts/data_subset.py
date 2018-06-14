@@ -58,20 +58,20 @@ if not token_file_exists or not clean_file_exists:
 
 # Declare different processed and unprocessed objects for further analysis
 raw_df = pd.read_csv(raw_data, header = 0)
-raw_type = np.array(raw_df['type'])
-raw_posts = np.array(raw_df['posts'])
+raw_type = raw_df['type']
+raw_posts = raw_df['posts']
 
 wide_df = pd.read_csv(wide_data, header = 0)
-wide_type = np.array(wide_df['type'])
-wide_posts = np.array(wide_df['posts'])
+wide_type = wide_df['type']
+wide_posts = wide_df['posts']
 
 token_df = pd.read_csv(token_data, header = 0)
-token_type = np.array(token_df['type'])
-token_posts = np.array(token_df['posts'])
+token_type = token_df['type']
+token_posts = token_df['posts']
 
 clean_df = pd.read_csv(clean_data, header = 0)
-clean_type = np.array(clean_df['type'])
-clean_posts = np.array(clean_df['posts'])
+clean_type = clean_df['type']
+clean_posts = clean_df['posts']
 
 # Split up data into training and testing datasets
 # To evaluate effectiveness of model training

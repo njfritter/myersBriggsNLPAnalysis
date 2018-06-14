@@ -14,7 +14,7 @@
 import numpy as np
 import pandas as pd
 import helper_functions as hf
-from data_extraction_cleanup import clean_df, clean_type, clean_posts
+from data_subset import clean_df, clean_type, clean_posts
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.feature_selection import SelectKBest, chi2 
@@ -58,10 +58,6 @@ print(rates)
 # Test set calculations
 test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nb, rownames = ['class'], colnames = ['predicted'])
 print(test_crosstb_nb)
-
-# Frequencies of personality types
-labels, counts = hf.unique_labels(y_test, plot = False)
-print(labels, counts)
 
 # Plot success rate versus frequency
 hf.scatter_plot(list(counts), list(rates.values())) 

@@ -41,10 +41,6 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 
 columns = np.array(['type', 'posts'])
 
-# Download stopwords & make list of stopwords so we don't have to reinitialize it every loop
-nltk.download('stopwords')
-stop_list = stopwords.words('english') + list(string.punctuation)
-
 '''
 Specific parsing strategy from:
 https://marcobonzanini.com/2015/03/09/mining-twitter-data-with-python-part-2/
@@ -138,6 +134,11 @@ def tokenize_data(df, filter_stopwords = False):
 
             # Remove stopwords if declared
             if filter_stopwords:
+
+                # Download stopwords & make list of stopwords here so we don't download every time
+                nltk.download('stopwords')
+                stop_list = stopwords.words('english') + list(string.punctuation)
+
                 tokenized_tweets = remove_stopwords(tokenized_tweets)
 
             # Append to list

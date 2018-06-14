@@ -12,14 +12,17 @@
 # Import packages
 ##################
 import helper_functions as hf
-from data_extraction_cleanup import raw_df, raw_type, raw_posts
-from data_extraction_cleanup import token_df, token_type, token_posts
-from data_extraction_cleanup import clean_df, clean_type, clean_posts
+import numpy as np
+import pandas as pd
+from data_subset import raw_df, raw_type, raw_posts
+from data_subset import token_df, token_type, token_posts
+from data_subset import clean_df, clean_type, clean_posts
 import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 import os, sys
 import nltk
+import wordcloud
 
 # Confirm we are in the correct directory, otherwise break script 
 # and prompt user to move to correct directory
@@ -59,8 +62,10 @@ print('''
 	''')
 
 # Frequency of Personality Types
-type_freq = raw_type.value_counts()
-print('Counts of Personality Types:\n', type_freq)
+unique, counts = np.unique(raw_type, return_counts = True)
+print('Counts of Personality Types:\n')
+for unique, counts in zip(unique, counts):
+	print(unique + ': ' + str(counts))
 
 # Frequencies of top 25 Words (Using tokenized data) 
 word_features = nltk.FreqDist(token_posts)
@@ -72,8 +77,10 @@ for word, frequency in word_features.most_common(25):
 	words_top_25.append(word.title())
 	freq_top_25.append(frequency)
 
+print(type(unique))
+print(type(counts))
 # Now make use of helper functions to plot the frequencies
-hf.plot_frequency(raw_type, type_freq, 'Types')
+#hf.plot_frequency(unique, counts, 'Types')
 hf.plot_frequency(words_top_25, freq_top_25, 'Words')
 
 # Using cleaned data
@@ -87,14 +94,14 @@ for word, frequency in word_features.most_common(25):
 	freq_top_25.append(frequency)
 
 print('''
-	--------------
-	- WORD CLOUD -
-	--------------
+	-------------------------
+	- DISPLAYING WORD CLOUD -
+	-------------------------
 	''')
 
 # Gather list of words using helper function
 individual_words = hf.gather_words(clean_posts)
-wordcloud_words = ' '.join(words)
+wordcloud_words = ' '.join(individual_words)
 
 # Lower max font size
 cloud = wordcloud.WordCloud(max_font_size = 40).generate(wordcloud_words)
@@ -112,4 +119,3 @@ print('''
 
 # Find every instance of hashtags, retweets, mentions
 # Using string matching patterns
-

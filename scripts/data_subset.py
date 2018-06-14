@@ -26,7 +26,6 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 	sys.exit(1)
 
 raw_data = 'data/mbti_1.csv'
-wide_data = 'data/mbti_wide.csv'
 token_data = 'data/mbti_tokenized.csv'
 clean_data = 'data/mbti_cleaned.csv'
 columns = np.array(['type', 'posts'])
@@ -61,10 +60,6 @@ raw_df = pd.read_csv(raw_data, header = 0)
 raw_type = raw_df['type']
 raw_posts = raw_df['posts']
 
-wide_df = pd.read_csv(wide_data, header = 0)
-wide_type = wide_df['type']
-wide_posts = wide_df['posts']
-
 token_df = pd.read_csv(token_data, header = 0)
 token_type = token_df['type']
 token_posts = token_df['posts']
@@ -78,8 +73,6 @@ clean_posts = clean_df['posts']
 X_train_token, X_test_token, y_train_token, y_test_token = train_test_split(
     token_posts, token_type, test_size = 0.30, random_state = 42)
 
-X_train_wide, X_test_wide, y_train_wide, y_test_wide = train_test_split(
-    wide_posts, wide_type, test_size = 0.30, random_state = 42)
-
 X_train_clean, X_test_clean, y_train_clean, y_test_clean = train_test_split(
     clean_posts, clean_type, test_size = 0.30, random_state = 42)
+

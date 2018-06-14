@@ -11,7 +11,6 @@
 ##################
 # Import packages
 ##################
-import time
 import sys, os
 import numpy as np
 import pandas as pd
@@ -27,7 +26,6 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 	sys.exit(1)
 
 raw_data = 'data/mbti_1.csv'
-wide_data = 'data/mbti_wide.csv'
 token_data = 'data/mbti_tokenized.csv'
 clean_data = 'data/mbti_cleaned.csv'
 columns = np.array(['type', 'posts'])
@@ -42,7 +40,7 @@ Explanation
 -----------
 Every user gets a line of data with all tweets put together, separated by three pipes (|||)
 I will split each line by that string pattern and create a new line for each tweet
-This is data in 'long' format; my justification is here: 
+This is data in 'long' format; justification can be found here: 
 https://sejdemyr.github.io/r-tutorials/basics/wide-and-long/
 
 And tokenize the line as well (keeping hashtags, urls, etc.)
@@ -57,20 +55,15 @@ file_exists = os.path.isfile(token_data)
 if file_exists:
     prompt_user = input('\nThe tokenized data appears to already exist.\n' +
         'Would you like to generate it again? (Y/n) ')
-if prompt_user == 'n':
-    print('\nContinuing to clean data without stopwords.')
-elif (prompt_user == 'Y') or (not file_exists):
-    start = time.time()
+
+if (prompt_user == 'Y') or (not file_exists):
     token_df = hf.parallelize(func = hf.tokenize_data, df = raw_df)
-    end = time.time()
-    elapsed = end - start
-    print('Time elapsed: %.2f' % elapsed)
     print('Tokenized Data Shape:', token_df.shape)
     print('Head of Tokenized Data:', token_df.head(10))
-
     # Write to csv
     token_df.to_csv(token_data, columns = list(token_df.columns.values), index = False)
-
+elif prompt_user == 'n':
+    print('\nContinuing to clean data without stopwords.')
 else:
     print('\nInvalid input, please run script again with valid input to create tokenized data.')
     sys.exit(1)
@@ -91,16 +84,12 @@ file_exists = os.path.isfile(clean_data)
 if file_exists:
     prompt_user = input('\nThe cleaned data appears to already exist.\n' +
         'Would you like to generate it again? (Y/n) ')
+
 if (prompt_user == 'Y') or (not file_exists):
-    start = time.time()
     #clean_df = hf.parallelize(func = hf.tokenize_data(raw_df, filter_stopwords = True), df = raw_df)
     clean_df = hf.tokenize_data(raw_df, filter_stopwords = True)
-    end = time.time()
-    elapsed = end - start
-    print('Time elapsed: %.2f' % elapsed)
     print('Cleaned Data Shape:', clean_df.shape)
     print('Head of Cleaned Data:', clean_df.head(10))
-
     # Write to csv
     clean_df.to_csv(clean_data, columns = list(clean_df.columns.values), index = False)
 elif prompt_user == 'n':

@@ -12,14 +12,19 @@
 # Import packages
 ##################
 import helper_functions as hf
-from data_extraction_cleanup import raw_df, raw_type, raw_posts
-from data_extraction_cleanup import token_df, token_type, token_posts
-from data_extraction_cleanup import clean_df, clean_type, clean_posts
+import numpy as np
+import pandas as pd
+from data_subset import raw_df, raw_type, raw_posts
+from data_subset import token_df, token_type, token_posts
+from data_subset import clean_df, clean_type, clean_posts
 import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 import os, sys
 import nltk
+from nltk import bigrams
+import wordcloud
+from collections import Counter
 
 # Confirm we are in the correct directory, otherwise break script 
 # and prompt user to move to correct directory
@@ -30,7 +35,6 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
     in order to run these scripts. Type \'pwd\' in the command line\
     if you are unsure of your location in the terminal.')
     sys.exit(1)
-
 
 # First print out basic information about the different data we have
 data_dfs = {
@@ -59,50 +63,45 @@ print('''
 	''')
 
 # Frequency of Personality Types
-type_freq = raw_type.value_counts()
-print('Counts of Personality Types:\n', type_freq)
+type_count = raw_type.value_counts()
+idx = type_count.index.tolist()
+freq = type_count.tolist()
 
-# Frequencies of top 25 Words (Using tokenized data) 
-word_features = nltk.FreqDist(token_posts)
-words_top_25 = []
-freq_top_25 = []
-print('Top 25 Tokenized Words:\n')
-for word, frequency in word_features.most_common(25):
-	print('%s: %d' % (word, frequency))
-	words_top_25.append(word.title())
-	freq_top_25.append(frequency)
+print('Counts of Personality Types:\n')
+for idx, freq in zip(idx, freq):
+    print(idx + ': ' + str(freq))
 
-# Now make use of helper functions to plot the frequencies
-hf.plot_frequency(raw_type, type_freq, 'Types')
-hf.plot_frequency(words_top_25, freq_top_25, 'Words')
+type_count.plot(kind = 'barh')
+plt.title('Personality Type Frequencies')
+plt.xlabel('Frequency')
+plt.ylabel('Type')
+plt.show()
+plt.savefig('images/typefrequencylabeled.png')
 
-# Using cleaned data
-word_features = nltk.FreqDist(clean_posts)
-words_top_25 = []
-freq_top_25 = []
+# Frequencies of words in tokenized data
+token_words = hf.gather_words(token_posts)
+token_freq = nltk.FreqDist(token_words)
 print('Top 25 Tokenized Words without Stopwords:\n')
-for word, frequency in word_features.most_common(25):
+for word, frequency in token_freq.most_common(25):
 	print('%s: %d' % (word, frequency))
-	words_top_25.append(word.title())
-	freq_top_25.append(frequency)
+
+token_freq.plot(25, title = 'Top 25 Word Frequencies', cumulative = False)
+
+# Frequencies of words in cleaned data
+clean_words = hf.gather_words(clean_posts)
+clean_freq = nltk.FreqDist(clean_words)
+print('Top 25 Tokenized Words without Stopwords:\n')
+for word, frequency in clean_freq.most_common(25):
+	print('%s: %d' % (word, frequency))
+
+clean_freq.plot(25, title = 'Top 25 Word Frequencies No Stopwords', cumulative = False)
 
 print('''
-	--------------
-	- WORD CLOUD -
-	--------------
+	---------------------------------
+	- DISPLAYING CLEANED WORD CLOUD -
+	---------------------------------
 	''')
-
-# Gather list of words using helper function
-individual_words = hf.gather_words(clean_posts)
-wordcloud_words = ' '.join(words)
-
-# Lower max font size
-cloud = wordcloud.WordCloud(max_font_size = 40).generate(wordcloud_words)
-plt.figure()
-plt.imshow(cloud, interpolation = 'bilinear')
-plt.axis("off")
-plt.savefig('images/wordcloud.png')
-plt.show()
+hf.plot_wordcloud(clean_posts, save_image = True)
 
 print('''
 	----------------------------------------------
@@ -112,4 +111,18 @@ print('''
 
 # Find every instance of hashtags, retweets, mentions
 # Using string matching patterns
+hashtag_rows = hf.find_pattern(token_df, 'posts', r'#.*?(?=\s|$)')
+print('Shape of remaining data with hashtags: ', hashtag_rows.shape)
+print(hashtag_rows['posts'])
 
+retweet_rows = hf.find_pattern(token_df, 'posts', 'rt')
+print('Shape of remaining data with retweets: ', retweet_rows.shape)
+print(retweet_rows['posts'])
+
+mention_rows = hf.find_pattern(token_df, 'posts', '@')
+print('Shape of remaining data with mentions: ', mention_rows.shape)
+print(mention_rows['posts'])
+
+url_rows = hf.find_pattern(token_df, 'posts', 'https')
+print('Shape of remaining data with urls: ', url_rows.shape)
+print(url_rows['posts'])

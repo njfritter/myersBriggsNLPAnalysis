@@ -15,7 +15,6 @@ import time
 import sys, os
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 import helper_functions as hf
 
 # Confirm the correct directory; break script and prompt user to move to correct directory otherwise
@@ -32,6 +31,7 @@ wide_data = 'data/mbti_wide.csv'
 token_data = 'data/mbti_tokenized.csv'
 clean_data = 'data/mbti_cleaned.csv'
 columns = np.array(['type', 'posts'])
+raw_df = pd.read_csv(raw_data, header = 0)
 
 ################
 # Tokenize data 
@@ -93,7 +93,7 @@ if file_exists:
         'Would you like to generate it again? (Y/n) ')
 if (prompt_user == 'Y') or (not file_exists):
     start = time.time()
-    #clean_df = hf.parallelize(func = hf.tokenize_data(remove_stopwords = True), df = raw_df)
+    #clean_df = hf.parallelize(func = hf.tokenize_data(raw_df, filter_stopwords = True), df = raw_df)
     clean_df = hf.tokenize_data(raw_df, filter_stopwords = True)
     end = time.time()
     elapsed = end - start
@@ -109,46 +109,3 @@ else:
     print('\nInvalid input, please run script again with a valid input\
     to create the cleaned data.')
     sys.exit(1)
-
-##################################################
-# Make different versions of our data for analysis
-##################################################
-
-'''
-Explanation
------------
-Now we will have various versions of our data:
-- Raw, unfiltered data
-- Tokenized data with hashtags, mentions, retweets, etc.
-- Cleaned tokenized data with stopwords removed
-
-We will now subset the data into various parts to be used in the other scripts
-'''
-
-# Declare different processed and unprocessed objects for further analysis
-raw_df = pd.read_csv(raw_data, header = 0)
-raw_type = raw_df['type']
-raw_posts = raw_df['posts']
-
-wide_df = pd.read_csv(wide_data, header = 0)
-wide_type = wide_df['type']
-wide_posts = wide_df['posts']
-
-token_df = pd.read_csv(token_data, header = 0)
-token_type = token_df['type']
-token_posts = token_df['posts']
-
-clean_df = pd.read_csv(clean_data, header = 0)
-clean_type = clean_df['type']
-clean_posts = clean_df['posts']
-
-# Split up data into training and testing datasets
-# To evaluate effectiveness of model training
-X_train_token, X_test_token, y_train_token, y_test_token = train_test_split(
-	token_posts, token_type, test_size = 0.30, random_state = 42)
-
-X_train_wide, X_test_wide, y_train_wide, y_test_wide = train_test_split(
-	wide_posts, wide_type, test_size = 0.30, random_state = 42)
-
-X_train_clean, X_test_clean, y_train_clean, y_test_clean = train_test_split(
-	clean_posts, clean_type, test_size = 0.30, random_state = 42)

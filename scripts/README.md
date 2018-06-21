@@ -5,11 +5,11 @@ Here are the different scripts I have included in this project. They each repres
 
 ### Scripts w/ Abstract Functions
 
-The scripts `data_extraction_cleanup.py` and  `helper_functions.py` have been made in order to simplify the other scripts and remove some of the more involved tasks. 
+The scripts `data_subset.py` and  `helper_functions.py` have been made in order to simplify the other scripts and remove some of the more involved tasks. 
 
 All other scripts import either one or both of the above, and make use of the variables and/or functions saved to these scripts. 
 
-For example, `data_extraction_cleanup.py` will using `mbti_1.csv` (the raw data) and create a tokenized file (`mbti_tokenized.csv`) and a tokenized file with stopwords removed (`mbti_cleaned.csv`). It will then turn the CSVs into dataframes and subset the data into variables that I import into the other scripts.
+For example, `data_subset.py` will use the tokenized file (`mbti_tokenized.csv`) and the tokenized file with stopwords removed (`mbti_cleaned.csv`) created by `data_generation.py` and turn them into dataframes and subset the data into variables that I import into the other scripts.
 
 The `helper_functions.py` script does many different things, from plotting frequencies to tokenizing data to creating a pipeline connecting many different parts together to create a fully functional machine learning model. 
 
@@ -17,7 +17,7 @@ It is getting big however, so I may divide it up based on what category the func
 
 ### The Other Scripts
 
-<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/otherguys.jpeg" style="width: 150px">
+<img src="https://raw.githubusercontent.com/Njfritter/myersBriggsNLPAnalysis/master/images/otherguys.jpeg" width="150" height="150">
 
 #### Exploratory Analysis
 

@@ -89,8 +89,12 @@ def remove_stopwords(text):
     Returns:
     - clean_words: list of words with stopwords removed
     '''
-    # Download stopwords & make list of stopwords here so we don't download every time
-    nltk.download('stopwords')
+    # Try finding the corpus of stopwords first to avoid trying a download again
+    # Then make list of stopwords here so we don't do this every time this script is called
+    try:
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        nltk.download('stopwords')
     stop_list = stopwords.words('english') + list(string.punctuation)
 
     clean_words = [term for term in text if term not in stop_list]
@@ -324,7 +328,7 @@ def parallelize(func, df):
 
 def find_pattern(df, text_column, pattern):
     '''
-    Purpose: Extract rows with text based on pattern given
+    Purpose: Extract tokens with text based on pattern given
 
     Inputs:
     - df: pandas dataframe we are analyzing
@@ -333,5 +337,9 @@ def find_pattern(df, text_column, pattern):
     '''
     rows = df[df[text_column].str.contains(pattern)]
     #rows = df[df[text_column].str.findall(pattern)]
+    print('\nRows of data with pattern %s: %s' %(pattern, rows.shape[0]))
+    print(rows[text_column].head(5))
 
-    return rows
+    words = gather_words(df[text_column])
+    words = [word for word in words if word.startswith(pattern)]
+    return words

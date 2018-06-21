@@ -25,9 +25,9 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 	if you are unsure of your location in the terminal.')
 	sys.exit(1)
 
-raw_data = 'data/mbti_1.csv'
-token_data = 'data/mbti_tokenized.csv'
-clean_data = 'data/mbti_cleaned.csv'
+raw_data = 'data/raw/mbti_1.csv'
+token_data = 'data/processed/mbti_tokenized.csv'
+clean_data = 'data/processed/mbti_cleaned.csv'
 columns = np.array(['type', 'posts'])
 
 ##################################################
@@ -75,4 +75,3 @@ X_train_token, X_test_token, y_train_token, y_test_token = train_test_split(
 
 X_train_clean, X_test_clean, y_train_clean, y_test_clean = train_test_split(
     clean_posts, clean_type, test_size = 0.30, random_state = 42)
-

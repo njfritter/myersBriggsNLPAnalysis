@@ -14,17 +14,14 @@
 import helper_functions as hf
 import numpy as np
 import pandas as pd
+import os, sys
+from nltk import FreqDist, bigrams
 from data_subset import raw_df, raw_type, raw_posts
 from data_subset import token_df, token_type, token_posts
 from data_subset import clean_df, clean_type, clean_posts
 import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
-import os, sys
-import nltk
-from nltk import bigrams
-import wordcloud
-from collections import Counter
 
 # Confirm we are in the correct directory, otherwise break script 
 # and prompt user to move to correct directory
@@ -39,8 +36,8 @@ if not filepath.endswith('myersBriggsNLPAnalysis'):
 # First print out basic information about the different data we have
 data_dfs = {
 	'Raw Data': raw_df,
-	'Long Data': token_df,
-	'Wide Data': clean_df 
+	'Tokenized Data': token_df,
+	'Tokenized Data w/o Stopwords': clean_df 
 }
 
 print('''
@@ -55,7 +52,7 @@ for desc, df in data_dfs.items():
 	print('Data types of %s' % desc, df.dtypes)
 	print('Head of %s' % desc, df.head(5))
 	print('Tail of %s' % desc, df.tail(5))
-
+"""
 print('''
 	------------------------------
 	- WORD AND LABEL FREQUENCIES -
@@ -80,7 +77,7 @@ plt.savefig('images/typefrequencylabeled.png')
 
 # Frequencies of words in tokenized data
 token_words = hf.gather_words(token_posts)
-token_freq = nltk.FreqDist(token_words)
+token_freq = FreqDist(token_words)
 print('Top 25 Tokenized Words without Stopwords:\n')
 for word, frequency in token_freq.most_common(25):
 	print('%s: %d' % (word, frequency))
@@ -89,7 +86,7 @@ token_freq.plot(25, title = 'Top 25 Word Frequencies', cumulative = False)
 
 # Frequencies of words in cleaned data
 clean_words = hf.gather_words(clean_posts)
-clean_freq = nltk.FreqDist(clean_words)
+clean_freq = FreqDist(clean_words)
 print('Top 25 Tokenized Words without Stopwords:\n')
 for word, frequency in clean_freq.most_common(25):
 	print('%s: %d' % (word, frequency))
@@ -103,6 +100,18 @@ print('''
 	''')
 hf.plot_wordcloud(clean_posts, save_image = True)
 
+"""
+print('''
+	-------------------
+	- BIGRAM ANALYSIS -
+	-------------------
+	''')
+token_bigram = bigrams(hf.gather_words(token_posts))
+token_bigram_counts = FreqDist(token_bigram)
+print('\nTokenized Bigram Frequencies:')
+for word, freq in token_bigram_counts.most_common(25):
+	print('%s: %d' % (word, freq))
+
 print('''
 	----------------------------------------------
 	- HASHTAG, RETWEET, MENTION, URL FREQUENCIES -
@@ -111,18 +120,27 @@ print('''
 
 # Find every instance of hashtags, retweets, mentions
 # Using string matching patterns
-hashtag_rows = hf.find_pattern(token_df, 'posts', r'#.*?(?=\s|$)')
-print('Shape of remaining data with hashtags: ', hashtag_rows.shape)
-print(hashtag_rows['posts'])
+mention_tokens = hf.find_pattern(token_df, 'posts', '@')
+mention_counts = FreqDist(mention_tokens)
+print('\nMention Frequencies:')
+for word, freq in mention_counts.most_common(25):
+	print('%s: %d' %(word, freq))
 
-retweet_rows = hf.find_pattern(token_df, 'posts', 'rt')
-print('Shape of remaining data with retweets: ', retweet_rows.shape)
-print(retweet_rows['posts'])
+#hashtag_tokens = hf.find_pattern(token_df, 'posts', r'#.*?(?=\s|$)')
+hashtag_tokens = hf.find_pattern(token_df, 'posts', '#')
+hashtag_counts = FreqDist(hashtag_tokens)
+print('\nHashtag Frquencies:')
+for word, freq in hashtag_counts.most_common(25):
+	print('%s: %d' % (word, freq))
 
-mention_rows = hf.find_pattern(token_df, 'posts', '@')
-print('Shape of remaining data with mentions: ', mention_rows.shape)
-print(mention_rows['posts'])
+retweet_tokens = hf.find_pattern(token_df, 'posts', 'rt')
+retweet_counts = FreqDist(retweet_tokens)
+print('\nRetweet Frequencies:')
+for word, freq in retweet_counts.most_common(50):
+	print('%s: %s' % (word, freq))
 
-url_rows = hf.find_pattern(token_df, 'posts', 'https')
-print('Shape of remaining data with urls: ', url_rows.shape)
-print(url_rows['posts'])
+url_tokens = hf.find_pattern(token_df, 'posts', 'https')
+url_counts = FreqDist(url_tokens)
+print('\nUrl Frequencies:')
+for word, freq in url_counts.most_common(25):
+	print('%s: %d' % (word, freq))

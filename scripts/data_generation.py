@@ -19,17 +19,19 @@ import helper_functions as hf
 # Confirm the correct directory; break script and prompt user to move to correct directory otherwise
 filepath = os.getcwd()
 if not filepath.endswith('myersBriggsNLPAnalysis'):
-	print('\nYou do not appear to be in the correct directory,\
-	you must be in the \'myersBriggsNLPAnalysis\' directory\
-	in order to run these scripts. Type \'pwd\' in the command line\
-	if you are unsure of your location in the terminal.')
+	print('\nYou do not appear to be in the correct directory, you must be in the \'myersBriggsNLPAnalysis\' directory\
+	in order to run these scripts. Type \'pwd\' in the command line if you are unsure of your location within the terminal.')
 	sys.exit(1)
 
+# Declare data and other variables
 raw_data = 'data/raw/mbti_1.csv'
 token_data = 'data/processed/mbti_tokenized.csv'
 clean_data = 'data/processed/mbti_cleaned.csv'
 columns = np.array(['type', 'posts'])
 raw_df = pd.read_csv(raw_data, header = 0)
+
+# Make directory for processed files if it doesn't already exist
+os.makedirs(os.path.dirname(token_data), exist_ok = True)
 
 ################
 # Tokenize data 

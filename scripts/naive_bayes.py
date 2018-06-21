@@ -19,14 +19,15 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.feature_selection import SelectKBest, chi2 
 from sklearn.model_selection import train_test_split
+import pickle, os
 
 # Naive Bayes parameters used for tuning
 parameters_nb = {
 	'vect__ngram_range': [(1, 1), (1, 2)],
 	'tdidf__use_idf': (True, False),
 	'clf__fit_prior': (True, False),
-	'clf__alpha:' (1.0e-10, 1.0e-5, 1.0e-2)
-}
+	'clf__alpha': (1.0e-10, 1.0e-5, 1.0e-2)
+	}
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(clean_posts, 
@@ -52,18 +53,23 @@ print("Number of mislabeled points out of a total %d points for the Naive Bayes 
     % (X_test.shape[0],(y_test != predicted_nb).sum()))
 
 # Display success rate of predictions for each type
-rates = hf.success_rates(y_test, predicted_nb, return_results = True)
-print(rates)
+#rates = hf.success_rates(y_test, predicted_nb, return_results = True)
+#print(rates)
 
 # Test set calculations
 test_crosstb_nb = pd.crosstab(index = y_test, columns = predicted_nb, rownames = ['class'], colnames = ['predicted'])
 print(test_crosstb_nb)
 
 # Plot success rate versus frequency
-hf.scatter_plot(list(counts), list(rates.values())) 
+#hf.scatter_plot(list(counts), list(rates.values())) 
 
 # Cross Validation
-cross_val(text_clf_nb, mbtiposts, mbtitype)
+hf.cross_val(text_clf_nb, X_train, y_train)
 
 # Do a Grid Search to test multiple parameter values
 #grid_search(text_clf_nb, parameters_nb, n_jobs = 1, X_train, y_train)
+
+# Save model (create directory for models too if it doesn't exist)
+model_file = 'models/pickle_models/finalized_NB.pkl'
+os.makedirs(os.path.dirname(model_file), exist_ok = True)
+pickle.dump(text_clf_nb, open(model_file, 'wb'))
